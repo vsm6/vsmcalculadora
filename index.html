@@ -111,40 +111,29 @@
     }
   </script>
 
-  <script>
-    async function salvarPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
+<script>
+  async function salvarPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
 
-      const resultadoElement = document.getElementById('resultado');
-      const resultadoTexto = resultadoElement.innerText;
+    const resultadoElement = document.getElementById('resultado');
+    const resultadoTexto = resultadoElement.innerText;
 
-      const logoImg = document.getElementById('logoVSM');
+    doc.setFontSize(16);
+    doc.text("Resultado - Calculadora Stanley Invertido VSM", 20, 20);
 
-      if (logoImg && logoImg.complete && logoImg.naturalWidth > 0) {
-        const canvas = document.createElement('canvas');
-        canvas.width = logoImg.naturalWidth;
-        canvas.height = logoImg.naturalHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(logoImg, 0, 0);
-        const logoBase64 = canvas.toDataURL('image/png');
-        doc.addImage(logoBase64, 'PNG', 70, 10, 70, 25);
-      }
+    const lines = doc.splitTextToSize(resultadoTexto, 170);
+    doc.setFontSize(12);
+    let y = 30;
+    lines.forEach((line) => {
+      doc.text(line, 20, y);
+      y += 8;
+    });
 
-      doc.setFontSize(16);
-      doc.text("Resultado - Calculadora Stanley Invertido VSM", 20, 45);
+    doc.save("resultado-stanley-vsm.pdf");
+  }
+</script>
 
-      const lines = doc.splitTextToSize(resultadoTexto, 170);
-      doc.setFontSize(12);
-      let y = 55;
-      lines.forEach((line) => {
-        doc.text(line, 20, y);
-        y += 8;
-      });
-
-      doc.save("resultado-stanley-vsm.pdf");
-    }
-  </script>
 
 </body>
 </html>
