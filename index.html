@@ -64,53 +64,87 @@
 
     <div id="resultado" class="mt-6 text-gray-800"></div>
     <button id="btnSalvarPDF" onclick="salvarPDF()" class="hidden mt-4 w-full bg-green-700 text-white font-semibold py-2 px-4 rounded hover:bg-green-800">Salvar resultado em PDF</button>
-    </div>
+  </div>
 
   <script>
-  function calcular() {
-    const sistema = document.getElementById('sistema').value;
-    const x = parseFloat(document.getElementById('x').value);
-    const c = parseFloat(document.getElementById('c').value);
-    const nf = parseInt(document.getElementById('nf').value);
-    const np = parseInt(document.getElementById('np').value);
-    const a = parseInt(document.getElementById('a').value);
-    const b = parseInt(document.getElementById('b').value);
+    function calcular() {
+      const sistema = document.getElementById('sistema').value;
+      const x = parseFloat(document.getElementById('x').value);
+      const c = parseFloat(document.getElementById('c').value);
+      const nf = parseInt(document.getElementById('nf').value);
+      const np = parseInt(document.getElementById('np').value);
+      const a = parseInt(document.getElementById('a').value);
+      const b = parseInt(document.getElementById('b').value);
 
-    const nt = nf - 1;
-    const h = c - 20;
+      const nt = nf - 1;
+      const h = c - 20;
 
-    let resultadoHTML = `<h3 class='font-bold text-lg mb-2'>Resultado:</h3>`;
-    resultadoHTML += `Altura da folha: <strong>${h.toFixed(2)} mm</strong><br>`;
+      let resultadoHTML = `<h3 class='font-bold text-lg mb-2'>Resultado:</h3>`;
+      resultadoHTML += `Altura da folha: <strong>${h.toFixed(2)} mm</strong><br>`;
 
-    if (sistema === '252') {
-      let l;
-      if (np === 1) {
-        l = (x + (nt * 15) - a - 10) / nf;
+      if (sistema === '252') {
+        let l;
+        if (np === 1) {
+          l = (x + (nt * 15) - a - 10) / nf;
+        } else {
+          l = (x + (nt * 15) - (a * 2)) / nf;
+        }
+        resultadoHTML += `Largura da folha: <strong>${l.toFixed(2)} mm</strong>`;
       } else {
-        l = (x + (nt * 15) - (a * 2)) / nf;
-      }
-      resultadoHTML += `Largura da folha: <strong>${l.toFixed(2)} mm</strong>`;
-    } else {
-      let l1;
-      if (np === 1) {
-        l1 = x + (nt * 20) - a - 10;
-      } else {
-        l1 = x + (nt * 20) - 2 * a;
+        let l1;
+        if (np === 1) {
+          l1 = x + (nt * 20) - a - 10;
+        } else {
+          l1 = x + (nt * 20) - 2 * a;
+        }
+
+        const l2 = (l1 - (b * np)) / nf;
+        const l3 = l2 + b;
+
+        resultadoHTML += `Largura da pele de vidro total: <strong>${l1.toFixed(2)} mm</strong><br>`;
+        resultadoHTML += `Tamanho das folhas menores: <strong>${l2.toFixed(2)} mm</strong><br>`;
+        resultadoHTML += `Tamanho da(s) folha(s) maior(es): <strong>${l3.toFixed(2)} mm</strong>`;
       }
 
-      const l2 = (l1 - (b * np)) / nf;
-      const l3 = l2 + b;
-
-      resultadoHTML += `Largura da pele de vidro total: <strong>${l1.toFixed(2)} mm</strong><br>`;
-      resultadoHTML += `Tamanho das folhas menores: <strong>${l2.toFixed(2)} mm</strong><br>`;
-      resultadoHTML += `Tamanho da(s) folha(s) maior(es): <strong>${l3.toFixed(2)} mm</strong>`;
+      document.getElementById('resultado').innerHTML = resultadoHTML;
+      document.getElementById('btnSalvarPDF').classList.remove('hidden');
     }
+  </script>
 
-    document.getElementById('resultado').innerHTML = resultadoHTML;
-    document.getElementById('btnSalvarPDF').classList.remove('hidden');
-  }
-</script>
+  <script>
+    async function salvarPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
 
+      const resultadoElement = document.getElementById('resultado');
+      const resultadoTexto = resultadoElement.innerText;
+
+      const logoImg = document.getElementById('logoVSM');
+
+      if (logoImg && logoImg.complete && logoImg.naturalWidth > 0) {
+        const canvas = document.createElement('canvas');
+        canvas.width = logoImg.naturalWidth;
+        canvas.height = logoImg.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(logoImg, 0, 0);
+        const logoBase64 = canvas.toDataURL('image/png');
+        doc.addImage(logoBase64, 'PNG', 70, 10, 70, 25);
+      }
+
+      doc.setFontSize(16);
+      doc.text("Resultado - Calculadora Stanley Invertido VSM", 20, 45);
+
+      const lines = doc.splitTextToSize(resultadoTexto, 170);
+      doc.setFontSize(12);
+      let y = 55;
+      lines.forEach((line) => {
+        doc.text(line, 20, y);
+        y += 8;
+      });
+
+      doc.save("resultado-stanley-vsm.pdf");
+    }
+  </script>
 
 </body>
 </html>
