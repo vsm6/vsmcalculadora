@@ -5,35 +5,18 @@
   <title>Calculadora Stanley Invertido VSM</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     .desenho-container {
       position: relative;
       display: inline-block;
     }
-    .medida-label {
+    .medida {
       position: absolute;
       color: red;
       font-weight: bold;
       font-size: 14px;
-    }
-    .altura-pos {
-      top: 50%;
-      right: 5px;
-      transform: translateY(-50%) rotate(-90deg);
-    }
-    .largura-pos {
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-    .legenda-pos {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 13px;
-      color: black;
     }
   </style>
 </head>
@@ -74,64 +57,51 @@ function calcular() {
 
   const nt = nf - 1;
   const h = c - 20;
-  let largura, html = "";
+  let largura = 0;
+  let html = "";
   let imgSrc = "";
-  let legenda = "";
+  let acessorios = "";
+  let semAcessorios = "";
 
-  if (npSelecionado === 'central') {
-    if (sistema === '252') {
-      largura = (x + (nt * 15) - 30) / nf;
+  if (npSelecionado === "2") {
+    if (sistema === "252") {
+      largura = (x + (nt * 15) - (a * 2)) / nf;
     } else {
-      const l1 = x + (nt * 20) - 30;
+      const l1 = x + (nt * 20) - 2 * a;
       const l2 = (l1 - (b * 2)) / nf;
       largura = l2 + b;
     }
-    imgSrc = 'fechamento central.png';
-    legenda = `PORTA COM ACESSÓRIOS (${nf - 2}) | VIDRO FIXO (2)`;
-  } else {
-    const np = parseInt(npSelecionado);
-    if (sistema === '252') {
-      largura = np === 1 ? (x + (nt * 15) - a - 10) / nf : (x + (nt * 15) - (a * 2)) / nf;
-    } else {
-      const l1 = np === 1 ? x + (nt * 20) - a - 10 : x + (nt * 20) - 2 * a;
-      const l2 = (l1 - (b * np)) / nf;
-      largura = l2 + b;
-    }
-    if (np === 1) {
-      imgSrc = '1 folha lateral com acessório.png';
-      legenda = `PORTA COM ACESSÓRIOS (1) | PORTA SEM ACESSÓRIOS (${nf - 1})`;
-    } else {
-      imgSrc = '2 folhas laterais com acessórios.png';
-      legenda = `PORTA COM ACESSÓRIOS (2) | PORTA SEM ACESSÓRIOS (${nf - 2})`;
-    }
+
+    imgSrc = "2 folhas laterais com acessórios.svg";
+    acessorios = "PORTA COM ACESSÓRIOS (2)";
+    semAcessorios = `PORTA SEM ACESSÓRIOS (${nf - 2})`;
+
+    html = `
+      <div class='desenho-container'>
+        <img src="${imgSrc}" alt="Desenho técnico" class="max-w-full" />
+        <div class="medida" style="top: 285px; left: 38px; transform: rotate(-90deg);">Altura: ${h.toFixed(2)} mm</div>
+        <div class="medida" style="top: 190px; left: 220px;">Largura: ${largura.toFixed(2)} mm</div>
+        <div class="medida" style="top: 415px; left: 105px;">${acessorios}</div>
+        <div class="medida" style="top: 415px; left: 305px;">${semAcessorios}</div>
+      </div>
+    `;
   }
 
-  html += `
-    <div class='desenho-container'>
-      <img src="${imgSrc}" alt="Desenho técnico" class="max-w-full" />
-      <div class="medida-label altura-pos">${h.toFixed(2)} mm</div>
-      <div class="medida-label largura-pos">${largura.toFixed(2)} mm</div>
-      <div class="legenda-pos">${legenda}</div>
-    </div>
-  `;
-
-  document.getElementById('resultado').innerHTML = html;
-  document.getElementById('btnSalvarPDF').classList.remove('hidden');
+  document.getElementById("resultado").innerHTML = html;
+  document.getElementById("btnSalvarPDF").classList.remove("hidden");
 }
 
 async function salvarPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-  const resultadoEl = document.getElementById('resultado');
-  const clone = resultadoEl.cloneNode(true);
+  const resultadoEl = document.getElementById("resultado");
 
-  html2canvas(clone).then(canvas => {
-    const imgData = canvas.toDataURL('image/png');
-    doc.addImage(imgData, 'PNG', 10, 10, 190, 0);
-    doc.save('resultado_stanley.pdf');
+  await html2canvas(resultadoEl).then((canvas) => {
+    const imgData = canvas.toDataURL("image/png");
+    doc.addImage(imgData, "PNG", 10, 10, 190, 0);
+    doc.save("resultado_stanley.pdf");
   });
 }
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </body>
 </html>
