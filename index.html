@@ -17,9 +17,24 @@
       font-weight: bold;
       font-size: 14px;
     }
-    .altura-pos { top: 90px; right: 10px; transform: rotate(-90deg); }
-    .largura-pos { top: 30px; left: 50%; transform: translateX(-50%); }
-    .legenda-pos { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); font-size: 13px; color: black; }
+    .altura-pos {
+      top: 50%;
+      right: 5px;
+      transform: translateY(-50%) rotate(-90deg);
+    }
+    .largura-pos {
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .legenda-pos {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 13px;
+      color: black;
+    }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
