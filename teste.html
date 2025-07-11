@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Calculadora Stanley Invertido VSM</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
+
+  <!-- Logo VSM -->
+  <div class="flex justify-center mb-6 w-full">
+    <img id="logoVSM" src="VSM logo.png" alt="Logo VSM" class="w-64" />
+  </div>
+
+  <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-2xl">
+    <h2 class="text-2xl font-bold text-center text-blue-800 mb-6">Calculadora Stanley Invertido VSM</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label for="sistema" class="font-semibold">Sistema:</label>
+        <select id="sistema" class="mt-1 p-2 border rounded w-full">
+          <option value="252">BX-252 / BX-253 (Carregamento)</option>
+          <option value="254">BX-254 / BX-255 (Carregamento e Retorno)</option>
+        </select>
+      </div>
+      <div>
+        <label for="x" class="font-semibold">Largura total do vão (em mm):</label>
+        <input type="number" id="x" class="mt-1 p-2 border rounded w-full" />
+      </div>
+      <div>
+        <label for="c" class="font-semibold">Altura total do vão (em mm):</label>
+        <input type="number" id="c" class="mt-1 p-2 border rounded w-full" />
+      </div>
+      <div>
+        <label for="nf" class="font-semibold">Número de folhas:</label>
+        <input type="number" id="nf" class="mt-1 p-2 border rounded w-full" />
+      </div>
+      <div>
+        <label for="np" class="font-semibold">Folhas com acessórios:</label>
+        <select id="np" class="mt-1 p-2 border rounded w-full">
+          <option value="1">1 folha com acessórios</option>
+          <option value="2">2 folhas com acessórios</option>
+          <option value="central">Fechamento Central</option>
+        </select>
+      </div>
+      <div>
+        <label for="a" class="font-semibold">Perfil do sistema:</label>
+        <select id="a" class="mt-1 p-2 border rounded w-full">
+          <option value="15">Sem recorte (15mm)</option>
+          <option value="10">Com recorte (10mm)</option>
+        </select>
+      </div>
+      <div>
+        <label for="b" class="font-semibold">Tipo de acessórios:</label>
+        <select id="b" class="mt-1 p-2 border rounded w-full">
+          <option value="90">Somente fechadura (90mm)</option>
+          <option value="120">Fechadura + puxador (120mm)</option>
+        </select>
+      </div>
+    </div>
+
+    <button onclick="calcular()" class="mt-6 w-full bg-blue-800 text-white font-semibold py-2 px-4 rounded hover:bg-blue-900">Calcular</button>
+
+    <div id="resultado" class="mt-6 text-gray-800"></div>
+    <button id="btnSalvarPDF" onclick="salvarPDF()" class="hidden mt-4 w-full bg-green-700 text-white font-semibold py-2 px-4 rounded hover:bg-green-800">Salvar resultado em PDF</button>
+  </div>
+
+  <script>
+    function calcular() {
+      const sistema = document.getElementById('sistema').value;
+      const x = parseFloat(document.getElementById('x').value);
+      const c = parseFloat(document.getElementById('c').value);
+      const nf = parseInt(document.getElementById('nf').value);
+      const npSelecionado = document.getElementById('np').value;
+      const a = parseInt(document.getElementById('a').value);
+      const b = parseInt(document.getElementById('b').value);
+
+      const nt = nf - 1;
+      const h = c - 20;
+
+      let resultadoHTML = `<h3 class='font-bold text-lg mb-2'>Resultado:</h3>`;
+      resultadoHTML += `Altura da folha: <strong>${h.toFixed(2)} mm</strong><br>`;
+
+      if (npSelecionado === 'central') {
+        if (sistema === '252') {
+          const l = (x + (nt * 15) - 30) / nf;
+          resultadoHTML += `Largura das folhas (Fechamento Central): <strong>${l.toFixed(2)} mm</strong><br>`;
+          resultadoHTML += `<em>Folhas dos cantos são fixas.</em>`;
+        } else {
+          const l1 = x + (nt * 20) - 30;
+          const l2 = (l1 - (b * 2)) / nf;
+          const l3 = l2 + b;
+          resultadoHTML += `Largura total de pele de vidro: <strong>${l1.toFixed(2)} mm</strong><br>`;
+          resultadoHTML += `Tamanho das folhas fixas (menores): <strong>${l2.toFixed(2)} mm</strong><br>`;
+          resultadoHTML += `Tamanho das folhas centrais (maiores): <strong>${l3.toFixed(2)} mm</strong><br>`;
+          resultadoHTML += `<em>Folhas centrais são as maiores e as dos cantos são fixas.</em>`;
+        }
+      } else {
+        const np = parseInt(npSelecionado);
+        if (sistema === '252') {
+          let l;
+          if (np === 1) {
+            l = (x + (nt * 15) - a - 10) / nf;
+          } else {
+            l = (x + (nt * 15) - (a * 2)) / nf;
+          }
+          resultadoHTML += `Largura da folha: <strong>${l.toFixed(2)} mm</strong>`;
+        } else {
+          let l1;
+          if (np === 1) {
+            l1 = x + (nt * 20) - a - 10;
+          } else {
+            l1 = x + (nt * 20) - 2 * a;
+          }
+
+          const l2 = (l1 - (b * np)) / nf;
+          const l3 = l2 + b;
+
+          resultadoHTML += `Largura da pele de vidro total: <strong>${l1.toFixed(2)} mm</strong><br>`;
+          resultadoHTML += `Tamanho das folhas menores: <strong>${l2.toFixed(2)} mm</strong><br>`;
+          resultadoHTML += `Tamanho da(s) folha(s) maior(es): <strong>${l3.toFixed(2)} mm</strong>`;
+        }
+      }
+
+      document.getElementById('resultado').innerHTML = resultadoHTML;
+      document.getElementById('btnSalvarPDF').classList.remove('hidden');
+    }
+
+    async function salvarPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      const resultado = document.getElementById('resultado').innerHTML;
+
+      // Logo base64
+      const logo = document.getElementById('logoVSM');
+      const canvas = document.createElement('canvas');
+      canvas.width = logo.width;
+      canvas.height = logo.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(logo, 0, 0);
+      const logoData = canvas.toDataURL('image/png');
+
+      doc.addImage(logoData, 'PNG', 15, 10, 50, 20);
+      doc.setFontSize(16);
+      doc.text("Calculadora Stanley Invertido VSM", 15, 40);
+      doc.setFontSize(12);
+      doc.fromHTML(resultado, 15, 50);
+      doc.save('resultado_stanley.pdf');
+    }
+  </script>
+
+</body>
+</html>
