@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -68,7 +69,20 @@
   </div>
 
   <script>
-    function calcular() {
+    const svgMap = {
+      '1': '1 folha com acessórios .svg',
+      '2': '2 folhas com acessórios.svg',
+      'central': 'fechamento central.svg'
+    };
+
+    function carregarSVG(path) {
+      return fetch(path)
+        .then(res => res.text())
+        .then(svg => `<div class="mt-4 border rounded p-2">${svg}</div>`)
+        .catch(() => `<p class="text-red-600 mt-4">Erro ao carregar o desenho técnico.</p>`);
+    }
+
+    async function calcular() {
       const sistema = document.getElementById('sistema').value;
       const x = parseFloat(document.getElementById('x').value);
       const c = parseFloat(document.getElementById('c').value);
@@ -81,21 +95,21 @@
       const h = c - 20;
 
       let resultadoHTML = `<h3 class='font-bold text-lg mb-2'>Resultado:</h3>`;
-      resultadoHTML += `Altura da folha: <strong>${h.toFixed(2)} mm</strong><br>`;
+      resultadoHTML += `Altura da folha (H): <strong>${h.toFixed(2)} mm</strong><br>`;
 
       if (npSelecionado === 'central') {
         if (sistema === '252') {
           const l = (x + (nt * 15) - 30) / nf;
-          resultadoHTML += `Largura das folhas (Fechamento Central): <strong>${l.toFixed(2)} mm</strong><br>`;
-          resultadoHTML += `<em>Folhas dos cantos são fixas.</em>`;
+          resultadoHTML += `Largura das folhas (Fechamento Central) (L): <strong>${l.toFixed(2)} mm</strong><br>`;
+          resultadoHTML += `<em>Folhas dos cantos são fixas.</em><br>`;
         } else {
           const l1 = x + (nt * 20) - 30;
           const l2 = (l1 - (b * 2)) / nf;
           const l3 = l2 + b;
-          resultadoHTML += `Largura total de pele de vidro: <strong>${l1.toFixed(2)} mm</strong><br>`;
-          resultadoHTML += `Tamanho das folhas fixas (menores): <strong>${l2.toFixed(2)} mm</strong><br>`;
-          resultadoHTML += `Tamanho das folhas centrais (maiores): <strong>${l3.toFixed(2)} mm</strong><br>`;
-          resultadoHTML += `<em>Folhas centrais são as maiores e as dos cantos são fixas.</em>`;
+          resultadoHTML += `Pele de vidro total (L1): <strong>${l1.toFixed(2)} mm</strong><br>`;
+          resultadoHTML += `Tamanho das folhas menores (L2): <strong>${l2.toFixed(2)} mm</strong><br>`;
+          resultadoHTML += `Tamanho das folhas maiores (L3): <strong>${l3.toFixed(2)} mm</strong><br>`;
+          resultadoHTML += `<em>Folhas centrais são as maiores e as dos cantos são fixas.</em><br>`;
         }
       } else {
         const np = parseInt(npSelecionado);
@@ -106,7 +120,7 @@
           } else {
             l = (x + (nt * 15) - (a * 2)) / nf;
           }
-          resultadoHTML += `Largura da folha: <strong>${l.toFixed(2)} mm</strong>`;
+          resultadoHTML += `Largura da folha (L): <strong>${l.toFixed(2)} mm</strong><br>`;
         } else {
           let l1;
           if (np === 1) {
@@ -118,13 +132,16 @@
           const l2 = (l1 - (b * np)) / nf;
           const l3 = l2 + b;
 
-          resultadoHTML += `Largura da pele de vidro total: <strong>${l1.toFixed(2)} mm</strong><br>`;
-          resultadoHTML += `Tamanho das folhas menores: <strong>${l2.toFixed(2)} mm</strong><br>`;
-          resultadoHTML += `Tamanho da(s) folha(s) maior(es): <strong>${l3.toFixed(2)} mm</strong>`;
+          resultadoHTML += `Pele de vidro total (L1): <strong>${l1.toFixed(2)} mm</strong><br>`;
+          resultadoHTML += `Tamanho das folhas menores (L2): <strong>${l2.toFixed(2)} mm</strong><br>`;
+          resultadoHTML += `Tamanho das folhas maiores (L3): <strong>${l3.toFixed(2)} mm</strong><br>`;
         }
       }
 
-      document.getElementById('resultado').innerHTML = resultadoHTML;
+      const svgPath = svgMap[npSelecionado];
+      const svgHTML = await carregarSVG(svgPath);
+
+      document.getElementById('resultado').innerHTML = resultadoHTML + svgHTML;
       document.getElementById('btnSalvarPDF').classList.remove('hidden');
     }
 
@@ -132,10 +149,13 @@
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
 
-      const resultado = document.getElementById('resultado').innerHTML;
-
-      // Logo base64
+      const resultado = document.getElementById('resultado');
       const logo = document.getElementById('logoVSM');
+
+      if (!logo.complete) {
+        await new Promise(resolve => logo.onload = resolve);
+      }
+
       const canvas = document.createElement('canvas');
       canvas.width = logo.width;
       canvas.height = logo.height;
@@ -147,10 +167,15 @@
       doc.setFontSize(16);
       doc.text("Calculadora Stanley Invertido VSM", 15, 40);
       doc.setFontSize(12);
-      doc.fromHTML(resultado, 15, 50);
-      doc.save('resultado_stanley.pdf');
+
+      doc.html(resultado, {
+        callback: function () {
+          doc.save('resultado_stanley.pdf');
+        },
+        x: 15,
+        y: 50
+      });
     }
   </script>
-
 </body>
 </html>
