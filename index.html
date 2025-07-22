@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
 
@@ -69,9 +70,16 @@
 
   <script>
     const svgMap = {
-      '1': '1 folha com acessórios .svg',
-      '2': '2 folhas com acessórios.svg',
-      'central': 'fechamento central.svg'
+      '252': {
+        '1': 'bx252-253 se 1 folha com acessório.svg',
+        '2': 'bx252-253 se 2 folhas com acessórios.svg',
+        'central': 'bx252-253 se fechamento central.svg'
+      },
+      '254': {
+        '1': 'bx254-255 se 1 folha com acessório.svg',
+        '2': 'bx254-255 se 2 folhas com acessórios.svg',
+        'central': 'bx254-255 se fechamento central.svg'
+      }
     };
 
     function carregarSVG(path) {
@@ -137,7 +145,7 @@
         }
       }
 
-      const svgPath = svgMap[npSelecionado];
+      const svgPath = svgMap[sistema][npSelecionado];
       const svgHTML = await carregarSVG(svgPath);
 
       document.getElementById('resultado').innerHTML = resultadoHTML + svgHTML;
@@ -146,7 +154,7 @@
 
     async function salvarPDF() {
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
+      const doc = new jsPDF('p', 'mm', 'a4');
 
       const resultado = document.getElementById('resultado');
       const logo = document.getElementById('logoVSM');
@@ -155,27 +163,30 @@
         await new Promise(resolve => logo.onload = resolve);
       }
 
-      const canvas = document.createElement('canvas');
-      canvas.width = logo.width;
-      canvas.height = logo.height;
-      const ctx = canvas.getContext('2d');
+      const canvasLogo = document.createElement('canvas');
+      canvasLogo.width = logo.width;
+      canvasLogo.height = logo.height;
+      const ctx = canvasLogo.getContext('2d');
       ctx.drawImage(logo, 0, 0);
-      const logoData = canvas.toDataURL('image/png');
+      const logoData = canvasLogo.toDataURL('image/png');
 
       doc.addImage(logoData, 'PNG', 15, 10, 50, 20);
       doc.setFontSize(16);
       doc.text("Calculadora Stanley Invertido VSM", 15, 40);
-      doc.setFontSize(12);
 
-      doc.html(resultado, {
-        callback: function () {
-          doc.save('resultado_stanley.pdf');
-        },
-        x: 15,
-        y: 50
+      const canvasResultado = await html2canvas(resultado, {
+        scale: 2,
+        backgroundColor: "#ffffff"
       });
+      const imgData = canvasResultado.toDataURL('image/png');
+
+      const pageWidth = 180;
+      const imgProps = canvasResultado.width / canvasResultado.height;
+      const imgHeight = pageWidth / imgProps;
+
+      doc.addImage(imgData, 'PNG', 15, 50, pageWidth, imgHeight);
+      doc.save('resultado_stanley_com_svg.pdf');
     }
   </script>
 </body>
 </html>
-
