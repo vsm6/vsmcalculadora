@@ -7,13 +7,19 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    #resultado svg {
+      max-width: 100%;
+      height: auto;
+    }
+    #resultado {
+      overflow-x: auto;
+      word-wrap: break-word;
+    }
+  </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
-
-  <!-- (Opcional) Removido o logo da interface -->
-  <!-- <div class="flex justify-center mb-6 w-full">
-    <img id="logoVSM" src="VSM logo.png" alt="Logo VSM" class="w-64" />
-  </div> -->
 
   <div class="bg-white border border-gray-400 rounded-xl shadow-md p-8 w-full max-w-4xl">
     <h2 class="text-2xl font-bold text-center text-blue-800 mb-6">Calculadora Stanley Invertido VSM</h2>
@@ -152,7 +158,16 @@
       document.getElementById('btnSalvarPDF').classList.remove('hidden');
     }
 
+    function isMobileDevice() {
+      return /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    }
+
     async function salvarPDF() {
+      if (isMobileDevice()) {
+        alert("A geração de PDF funciona melhor em um computador. Por favor, acesse este site em um desktop para salvar corretamente.");
+        return;
+      }
+
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF('p', 'mm', 'a4');
 
