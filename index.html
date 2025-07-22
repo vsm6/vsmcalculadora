@@ -10,10 +10,10 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
 
-  <!-- Logo VSM -->
-  <div class="flex justify-center mb-6 w-full">
+  <!-- (Opcional) Removido o logo da interface -->
+  <!-- <div class="flex justify-center mb-6 w-full">
     <img id="logoVSM" src="VSM logo.png" alt="Logo VSM" class="w-64" />
-  </div>
+  </div> -->
 
   <div class="bg-white border border-gray-400 rounded-xl shadow-md p-8 w-full max-w-4xl">
     <h2 class="text-2xl font-bold text-center text-blue-800 mb-6">Calculadora Stanley Invertido VSM</h2>
@@ -157,22 +157,6 @@
       const doc = new jsPDF('p', 'mm', 'a4');
 
       const resultado = document.getElementById('resultado');
-      const logo = document.getElementById('logoVSM');
-
-      if (!logo.complete) {
-        await new Promise(resolve => logo.onload = resolve);
-      }
-
-      const canvasLogo = document.createElement('canvas');
-      canvasLogo.width = logo.width;
-      canvasLogo.height = logo.height;
-      const ctx = canvasLogo.getContext('2d');
-      ctx.drawImage(logo, 0, 0);
-      const logoData = canvasLogo.toDataURL('image/png');
-
-      doc.addImage(logoData, 'PNG', 15, 10, 50, 20);
-      doc.setFontSize(16);
-      doc.text("Calculadora Stanley Invertido VSM", 15, 40);
 
       const canvasResultado = await html2canvas(resultado, {
         scale: 2,
@@ -182,26 +166,23 @@
 
       const pageWidth = 210;
       const pageHeight = 297;
-      const marginX = 15;
-      const marginY = 50;
-      const maxWidth = pageWidth - 2 * marginX;
-      const maxHeight = pageHeight - marginY - 15;
+      const margin = 10;
+      const maxWidth = pageWidth - 2 * margin;
+      const maxHeight = pageHeight - 2 * margin;
 
-      const imgWidthPx = canvasResultado.width;
-      const imgHeightPx = canvasResultado.height;
       const pxToMm = 0.264583;
-      const imgWidthMm = imgWidthPx * pxToMm;
-      const imgHeightMm = imgHeightPx * pxToMm;
+      const imgWidthMm = canvasResultado.width * pxToMm;
+      const imgHeightMm = canvasResultado.height * pxToMm;
 
-      const widthScale = maxWidth / imgWidthMm;
-      const heightScale = maxHeight / imgHeightMm;
-      const scale = Math.min(widthScale, heightScale);
-
+      const scale = Math.min(maxWidth / imgWidthMm, maxHeight / imgHeightMm);
       const finalWidth = imgWidthMm * scale;
       const finalHeight = imgHeightMm * scale;
 
-      doc.addImage(imgData, 'PNG', marginX, marginY, finalWidth, finalHeight);
-      doc.save('resultado_stanley_completo.pdf');
+      const offsetX = (pageWidth - finalWidth) / 2;
+      const offsetY = (pageHeight - finalHeight) / 2;
+
+      doc.addImage(imgData, 'PNG', offsetX, offsetY, finalWidth, finalHeight);
+      doc.save('resultado_stanley_simples.pdf');
     }
   </script>
 </body>
