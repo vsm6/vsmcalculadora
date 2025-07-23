@@ -7,19 +7,13 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
-  <style>
-    #resultado svg {
-      max-width: 100%;
-      height: auto;
-    }
-    #resultado {
-      overflow-x: auto;
-      word-wrap: break-word;
-    }
-  </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
+
+  <!-- Logo VSM -->
+  <div class="flex justify-center mb-6 w-full">
+    <img id="logoVSM" src="VSM logo.png" alt="Logo VSM" class="w-64" />
+  </div>
 
   <div class="bg-white border border-gray-400 rounded-xl shadow-md p-8 w-full max-w-4xl">
     <h2 class="text-2xl font-bold text-center text-blue-800 mb-6">Calculadora Stanley Invertido VSM</h2>
@@ -108,20 +102,29 @@
       const h = c - 20;
 
       let resultadoHTML = `<h3 class='font-bold text-lg mb-2'>Resultado:</h3>`;
+      resultadoHTML += `<strong>Dados fornecidos:</strong><br>`;
+      resultadoHTML += `Largura total do vão: <strong>${x} mm</strong><br>`;
+      resultadoHTML += `Altura total do vão: <strong>${c} mm</strong><br>`;
+      resultadoHTML += `Número de folhas: <strong>${nf}</strong><br>`;
+      resultadoHTML += `Sistema: <strong>${sistema === '252' ? 'BX-252 / BX-253' : 'BX-254 / BX-255'}</strong><br><br>`;
       resultadoHTML += `Altura da folha (H): <strong>${h.toFixed(2)} mm</strong><br>`;
 
       if (npSelecionado === 'central') {
         if (sistema === '252') {
-          const l = (x + ((nf - 2) * 15) - 30) / nf;
+          const l = (x + (nt * 15) - 30) / nf;
           resultadoHTML += `Largura das folhas (Fechamento Central) (L): <strong>${l.toFixed(2)} mm</strong><br>`;
           resultadoHTML += `<em>Folhas dos cantos são fixas.</em><br>`;
         } else {
-          const l1 = x + ( (nf - 2) * 20) - 30;
+          const l1 = x + (nt * 20) - 30;
           const l2 = (l1 - (b * 2)) / nf;
           const l3 = l2 + b;
+
+          const maiores = 2;
+          const menores = nf - 2;
+
           resultadoHTML += `Pele de vidro total (L1): <strong>${l1.toFixed(2)} mm</strong><br>`;
-          resultadoHTML += `Tamanho das folhas menores (L2): <strong>${l2.toFixed(2)} mm</strong><br>`;
-          resultadoHTML += `Tamanho das folhas maiores (L3): <strong>${l3.toFixed(2)} mm</strong><br>`;
+          resultadoHTML += `Tamanho das folhas menores (L2): <strong>${l2.toFixed(2)} mm</strong> (${menores} folhas)<br>`;
+          resultadoHTML += `Tamanho das folhas maiores (L3): <strong>${l3.toFixed(2)} mm</strong> (${maiores} folhas)<br>`;
           resultadoHTML += `<em>Folhas centrais são as maiores e as dos cantos são fixas.</em><br>`;
         }
       } else {
@@ -145,9 +148,20 @@
           const l2 = (l1 - (b * np)) / nf;
           const l3 = l2 + b;
 
+          let maiores = 0;
+          let menores = 0;
+
+          if (np === 1) {
+            maiores = 1;
+            menores = nf - 1;
+          } else {
+            maiores = 2;
+            menores = nf - 2;
+          }
+
           resultadoHTML += `Pele de vidro total (L1): <strong>${l1.toFixed(2)} mm</strong><br>`;
-          resultadoHTML += `Tamanho das folhas menores (L2): <strong>${l2.toFixed(2)} mm</strong><br>`;
-          resultadoHTML += `Tamanho das folhas maiores (L3): <strong>${l3.toFixed(2)} mm</strong><br>`;
+          resultadoHTML += `Tamanho das folhas menores (L2): <strong>${l2.toFixed(2)} mm</strong> (${menores} folhas)<br>`;
+          resultadoHTML += `Tamanho das folhas maiores (L3): <strong>${l3.toFixed(2)} mm</strong> (${maiores} folhas)<br>`;
         }
       }
 
@@ -158,20 +172,27 @@
       document.getElementById('btnSalvarPDF').classList.remove('hidden');
     }
 
-    function isMobileDevice() {
-      return /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-    }
-
     async function salvarPDF() {
-      if (isMobileDevice()) {
-        alert("A geração de PDF funciona melhor em um computador. Por favor, acesse este site em um desktop para salvar corretamente.");
-        return;
-      }
-
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF('p', 'mm', 'a4');
 
       const resultado = document.getElementById('resultado');
+      const logo = document.getElementById('logoVSM');
+
+      if (!logo.complete) {
+        await new Promise(resolve => logo.onload = resolve);
+      }
+
+      const canvasLogo = document.createElement('canvas');
+      canvasLogo.width = logo.width;
+      canvasLogo.height = logo.height;
+      const ctx = canvasLogo.getContext('2d');
+      ctx.drawImage(logo, 0, 0);
+      const logoData = canvasLogo.toDataURL('image/png');
+
+      doc.addImage(logoData, 'PNG', 15, 10, 50, 20);
+      doc.setFontSize(16);
+      doc.text("Calculadora Stanley Invertido VSM", 15, 40);
 
       const canvasResultado = await html2canvas(resultado, {
         scale: 2,
@@ -179,25 +200,12 @@
       });
       const imgData = canvasResultado.toDataURL('image/png');
 
-      const pageWidth = 210;
-      const pageHeight = 297;
-      const margin = 10;
-      const maxWidth = pageWidth - 2 * margin;
-      const maxHeight = pageHeight - 2 * margin;
+      const pageWidth = 180;
+      const imgProps = canvasResultado.width / canvasResultado.height;
+      const imgHeight = pageWidth / imgProps;
 
-      const pxToMm = 0.264583;
-      const imgWidthMm = canvasResultado.width * pxToMm;
-      const imgHeightMm = canvasResultado.height * pxToMm;
-
-      const scale = Math.min(maxWidth / imgWidthMm, maxHeight / imgHeightMm);
-      const finalWidth = imgWidthMm * scale;
-      const finalHeight = imgHeightMm * scale;
-
-      const offsetX = (pageWidth - finalWidth) / 2;
-      const offsetY = (pageHeight - finalHeight) / 2;
-
-      doc.addImage(imgData, 'PNG', offsetX, offsetY, finalWidth, finalHeight);
-      doc.save('resultado_stanley_simples.pdf');
+      doc.addImage(imgData, 'PNG', 15, 50, pageWidth, imgHeight);
+      doc.save('resultado_stanley_com_svg.pdf');
     }
   </script>
 </body>
