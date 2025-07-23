@@ -166,7 +166,7 @@
         }
       }
 
-      resultadoHTML += `</div></div>`; // fecha as colunas e o grid
+      resultadoHTML += `</div></div>`;
 
       const svgPath = svgMap[sistema][npSelecionado];
       const svgHTML = await carregarSVG(svgPath);
@@ -178,6 +178,8 @@
     async function salvarPDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
 
       const resultado = document.getElementById('resultado');
       const logo = document.getElementById('logoVSM');
@@ -195,19 +197,32 @@
 
       doc.addImage(logoData, 'PNG', 15, 10, 50, 20);
       doc.setFontSize(16);
-      doc.text("Calculadora Stanley Invertido VSM", 15, 30);
+      doc.text("Calculadora Stanley Invertido VSM", 15, 35);
 
       const canvasResultado = await html2canvas(resultado, {
         scale: 2,
-        backgroundColor: "#ffffff"
+        backgroundColor: "#ffffff",
+        useCORS: true,
+        windowWidth: document.body.scrollWidth,
       });
+
       const imgData = canvasResultado.toDataURL('image/png');
-
-      const pageWidth = 180;
       const imgProps = canvasResultado.width / canvasResultado.height;
-      const imgHeight = pageWidth / imgProps;
 
-      doc.addImage(imgData, 'PNG', 15, 38, pageWidth, imgHeight);
+      const imgWidth = pageWidth - 30;
+      const imgHeight = imgWidth / imgProps;
+      const topMargin = 40;
+      const bottomMargin = 10;
+
+      if (imgHeight > pageHeight - topMargin - bottomMargin) {
+        const maxHeight = pageHeight - topMargin - bottomMargin;
+        const adjustedWidth = maxHeight * imgProps;
+        const x = (pageWidth - adjustedWidth) / 2;
+        doc.addImage(imgData, 'PNG', x, topMargin, adjustedWidth, maxHeight);
+      } else {
+        doc.addImage(imgData, 'PNG', 15, topMargin, imgWidth, imgHeight);
+      }
+
       doc.save('resultado_stanley_completo.pdf');
     }
   </script>
