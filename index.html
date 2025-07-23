@@ -10,7 +10,6 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
 
-  <!-- Logo VSM -->
   <div class="flex justify-center mb-6 w-full">
     <img id="logoVSM" src="VSM logo.png" alt="Logo VSM" class="w-64" />
   </div>
@@ -101,31 +100,34 @@
       const nt = nf - 1;
       const h = c - 20;
 
-      let resultadoHTML = `<h3 class='font-bold text-lg mb-2'>Resultado:</h3>`;
-      resultadoHTML += `<strong>Dados fornecidos:</strong><br>`;
-      resultadoHTML += `Largura total do vão: <strong>${x} mm</strong><br>`;
-      resultadoHTML += `Altura total do vão: <strong>${c} mm</strong><br>`;
-      resultadoHTML += `Número de folhas: <strong>${nf}</strong><br>`;
-      resultadoHTML += `Sistema: <strong>${sistema === '252' ? 'BX-252 / BX-253' : 'BX-254 / BX-255'}</strong><br><br>`;
-      resultadoHTML += `Altura da folha (H): <strong>${h.toFixed(2)} mm</strong><br>`;
+      let resultadoHTML = `
+        <h3 class='font-bold text-lg mb-4'>Resultado:</h3>
+        <div class="grid md:grid-cols-2 gap-6 text-sm">
+          <div>
+            <h4 class="font-semibold text-blue-800 mb-2">Dados fornecidos:</h4>
+            Largura total do vão: <strong>${x} mm</strong><br>
+            Altura total do vão: <strong>${c} mm</strong><br>
+            Número de folhas: <strong>${nf}</strong><br>
+            Sistema: <strong>${sistema === '252' ? 'BX-252 / BX-253' : 'BX-254 / BX-255'}</strong><br>
+          </div>
+          <div>
+            <h4 class="font-semibold text-green-800 mb-2">Cálculos:</h4>
+            Altura da folha (H): <strong>${h.toFixed(2)} mm</strong><br>`;
 
       if (npSelecionado === 'central') {
         if (sistema === '252') {
           const l = (x + (nt * 15) - 30) / nf;
           resultadoHTML += `Largura das folhas (Fechamento Central) (L): <strong>${l.toFixed(2)} mm</strong><br>`;
-          resultadoHTML += `<em>Folhas dos cantos são fixas.</em><br>`;
         } else {
           const l1 = x + (nt * 20) - 30;
           const l2 = (l1 - (b * 2)) / nf;
           const l3 = l2 + b;
-
           const maiores = 2;
           const menores = nf - 2;
 
           resultadoHTML += `Pele de vidro total (L1): <strong>${l1.toFixed(2)} mm</strong><br>`;
           resultadoHTML += `Tamanho das folhas menores (L2): <strong>${l2.toFixed(2)} mm</strong> (${menores} folhas)<br>`;
           resultadoHTML += `Tamanho das folhas maiores (L3): <strong>${l3.toFixed(2)} mm</strong> (${maiores} folhas)<br>`;
-          resultadoHTML += `<em>Folhas centrais são as maiores e as dos cantos são fixas.</em><br>`;
         }
       } else {
         const np = parseInt(npSelecionado);
@@ -147,23 +149,16 @@
 
           const l2 = (l1 - (b * np)) / nf;
           const l3 = l2 + b;
-
-          let maiores = 0;
-          let menores = 0;
-
-          if (np === 1) {
-            maiores = 1;
-            menores = nf - 1;
-          } else {
-            maiores = 2;
-            menores = nf - 2;
-          }
+          const maiores = np === 1 ? 1 : 2;
+          const menores = nf - maiores;
 
           resultadoHTML += `Pele de vidro total (L1): <strong>${l1.toFixed(2)} mm</strong><br>`;
           resultadoHTML += `Tamanho das folhas menores (L2): <strong>${l2.toFixed(2)} mm</strong> (${menores} folhas)<br>`;
           resultadoHTML += `Tamanho das folhas maiores (L3): <strong>${l3.toFixed(2)} mm</strong> (${maiores} folhas)<br>`;
         }
       }
+
+      resultadoHTML += `</div></div>`; // fecha as duas colunas
 
       const svgPath = svgMap[sistema][npSelecionado];
       const svgHTML = await carregarSVG(svgPath);
