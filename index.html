@@ -7,10 +7,14 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    .nowrap-parens {
+      white-space: nowrap;
+    }
+  </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
 
-  <!-- Logo VSM -->
   <div class="flex justify-center mb-6 w-full">
     <img id="logoVSM" src="VSM logo.png" alt="Logo VSM" class="w-64" />
   </div>
@@ -64,7 +68,10 @@
 
     <button onclick="calcular()" class="mt-6 w-full bg-blue-800 text-white font-semibold py-2 px-4 rounded hover:bg-blue-900">Calcular</button>
 
-    <div id="resultado" class="mt-6 text-gray-800 font-mono text-base leading-relaxed border-t pt-4"></div>
+    <div id="resultado" class="mt-2 text-gray-800 font-mono text-base leading-relaxed border-t pt-2 flex justify-center">
+      <div class="max-w-3xl text-center w-full"></div>
+    </div>
+
     <button id="btnSalvarPDF" onclick="salvarPDF()" class="hidden mt-4 w-full bg-green-700 text-white font-semibold py-2 px-4 rounded hover:bg-green-800">Salvar resultado em PDF</button>
   </div>
 
@@ -101,22 +108,34 @@
       const nt = nf - 1;
       const h = c - 20;
 
-      let resultadoHTML = `<h3 class='font-bold text-lg mb-2'>Resultado:</h3>`;
-      resultadoHTML += `Altura da folha (H): <strong>${h.toFixed(2)} mm</strong><br>`;
+      let resultadoHTML = `
+        <h3 class='font-bold text-lg mb-4'>Resultado:</h3>
+        <div class="grid md:grid-cols-2 gap-6 text-sm">
+          <div>
+            <h4 class="font-semibold text-blue-800 mb-2">Dados fornecidos:</h4>
+            Largura total do vão: <strong>${x} mm</strong><br>
+            Altura total do vão: <strong>${c} mm</strong><br>
+            Número de folhas: <strong>${nf}</strong><br>
+            Sistema: <strong>${sistema === '252' ? 'BX-252 / BX-253' : 'BX-254 / BX-255'}</strong><br>
+          </div>
+          <div>
+            <h4 class="font-semibold text-green-800 mb-2">Cálculos:</h4>
+            Altura da folha (H): <strong>${h.toFixed(2)} mm</strong><br>`;
 
       if (npSelecionado === 'central') {
         if (sistema === '252') {
-          const l = (x + ((nf - 2 ) * 15) - 30) / nf;
+          const l = (x + ((nf - 2) * 15) - 30) / nf;
           resultadoHTML += `Largura das folhas (Fechamento Central) (L): <strong>${l.toFixed(2)} mm</strong><br>`;
-          resultadoHTML += `<em>Folhas dos cantos são fixas.</em><br>`;
         } else {
           const l1 = x + ((nf - 2) * 20) - 30;
           const l2 = (l1 - (b * 2)) / nf;
           const l3 = l2 + b;
+          const maiores = 2;
+          const menores = nf - 2;
+
           resultadoHTML += `Pele de vidro total (L1): <strong>${l1.toFixed(2)} mm</strong><br>`;
-          resultadoHTML += `Tamanho das folhas menores (L2): <strong>${l2.toFixed(2)} mm</strong><br>`;
-          resultadoHTML += `Tamanho das folhas maiores (L3): <strong>${l3.toFixed(2)} mm</strong><br>`;
-          resultadoHTML += `<em>Folhas centrais são as maiores e as dos cantos são fixas.</em><br>`;
+          resultadoHTML += `Tamanho das folhas menores (L2): <strong>${l2.toFixed(2)} mm</strong> <span class="nowrap-parens">(${menores} folhas)</span><br>`;
+          resultadoHTML += `Tamanho das folhas maiores (L3): <strong>${l3.toFixed(2)} mm</strong> <span class="nowrap-parens">(${maiores} folhas)</span><br>`;
         }
       } else {
         const np = parseInt(npSelecionado);
@@ -138,23 +157,29 @@
 
           const l2 = (l1 - (b * np)) / nf;
           const l3 = l2 + b;
+          const maiores = np === 1 ? 1 : 2;
+          const menores = nf - maiores;
 
           resultadoHTML += `Pele de vidro total (L1): <strong>${l1.toFixed(2)} mm</strong><br>`;
-          resultadoHTML += `Tamanho das folhas menores (L2): <strong>${l2.toFixed(2)} mm</strong><br>`;
-          resultadoHTML += `Tamanho das folhas maiores (L3): <strong>${l3.toFixed(2)} mm</strong><br>`;
+          resultadoHTML += `Tamanho das folhas menores (L2): <strong>${l2.toFixed(2)} mm</strong> <span class="nowrap-parens">(${menores} folhas)</span><br>`;
+          resultadoHTML += `Tamanho das folhas maiores (L3): <strong>${l3.toFixed(2)} mm</strong> <span class="nowrap-parens">(${maiores} folhas)</span><br>`;
         }
       }
+
+      resultadoHTML += `</div></div>`;
 
       const svgPath = svgMap[sistema][npSelecionado];
       const svgHTML = await carregarSVG(svgPath);
 
-      document.getElementById('resultado').innerHTML = resultadoHTML + svgHTML;
+      document.querySelector('#resultado > div').innerHTML = resultadoHTML + svgHTML;
       document.getElementById('btnSalvarPDF').classList.remove('hidden');
     }
 
     async function salvarPDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
 
       const resultado = document.getElementById('resultado');
       const logo = document.getElementById('logoVSM');
@@ -172,20 +197,33 @@
 
       doc.addImage(logoData, 'PNG', 15, 10, 50, 20);
       doc.setFontSize(16);
-      doc.text("Calculadora Stanley Invertido VSM", 15, 40);
+      doc.text("Calculadora Stanley Invertido VSM", 15, 35);
 
       const canvasResultado = await html2canvas(resultado, {
         scale: 2,
-        backgroundColor: "#ffffff"
+        backgroundColor: "#ffffff",
+        useCORS: true,
+        windowWidth: document.body.scrollWidth,
       });
+
       const imgData = canvasResultado.toDataURL('image/png');
-
-      const pageWidth = 180;
       const imgProps = canvasResultado.width / canvasResultado.height;
-      const imgHeight = pageWidth / imgProps;
 
-      doc.addImage(imgData, 'PNG', 15, 50, pageWidth, imgHeight);
-      doc.save('resultado_stanley_com_svg.pdf');
+      const imgWidth = pageWidth - 30;
+      const imgHeight = imgWidth / imgProps;
+      const topMargin = 40;
+      const bottomMargin = 10;
+
+      if (imgHeight > pageHeight - topMargin - bottomMargin) {
+        const maxHeight = pageHeight - topMargin - bottomMargin;
+        const adjustedWidth = maxHeight * imgProps;
+        const x = (pageWidth - adjustedWidth) / 2;
+        doc.addImage(imgData, 'PNG', x, topMargin, adjustedWidth, maxHeight);
+      } else {
+        doc.addImage(imgData, 'PNG', 15, topMargin, imgWidth, imgHeight);
+      }
+
+      doc.save('resultado_stanley_completo.pdf');
     }
   </script>
 </body>
