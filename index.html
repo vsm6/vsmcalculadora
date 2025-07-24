@@ -166,7 +166,7 @@
         }
       }
 
-      resultadoHTML += `</div></div>`;
+      resultadoHTML += `</div></div>`; // fecha colunas
 
       const svgPath = svgMap[sistema][npSelecionado];
       const svgHTML = await carregarSVG(svgPath);
@@ -211,6 +211,7 @@
 
       const imgWidth = pageWidth - 30;
       const imgHeight = imgWidth / imgProps;
+
       const topMargin = 40;
       const bottomMargin = 10;
 
