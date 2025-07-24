@@ -98,7 +98,7 @@
       const a = parseInt(document.getElementById('a').value);
       const b = parseInt(document.getElementById('b').value);
 
-      const nt = (npSelecionado === 'central') ? nf - 2 : nf - 1;
+      const nt = nf - 1;
       const h = c - 20;
 
       let resultadoHTML = `<h3 class='font-bold text-lg mb-2'>Resultado:</h3>`;
@@ -106,11 +106,11 @@
 
       if (npSelecionado === 'central') {
         if (sistema === '252') {
-          const l = (x + (nt * 15) - 30) / nf;
+          const l = (x + ((nf - 2 ) * 15) - 30) / nf;
           resultadoHTML += `Largura das folhas (Fechamento Central) (L): <strong>${l.toFixed(2)} mm</strong><br>`;
           resultadoHTML += `<em>Folhas dos cantos são fixas.</em><br>`;
         } else {
-          const l1 = x + (nt * 20) - 30;
+          const l1 = x + ((nf - 2) * 20) - 30;
           const l2 = (l1 - (b * 2)) / nf;
           const l3 = l2 + b;
           resultadoHTML += `Pele de vidro total (L1): <strong>${l1.toFixed(2)} mm</strong><br>`;
