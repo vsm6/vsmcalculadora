@@ -132,33 +132,35 @@
         .catch(() => `<p class="text-red-600 mt-4">Erro ao carregar o desenho técnico.</p>`);
     }
 
-    async function calcular() {
-      const sistema = document.getElementById('sistema').value;
-      const x = parseFloat(document.getElementById('x').value);
-      const c = parseFloat(document.getElementById('c').value);
-      const nf = parseInt(document.getElementById('nf').value);
-      const npSelecionado = document.getElementById('np').value;
-      const a = parseInt(document.getElementById('a').value);
-      const b = parseInt(document.getElementById('b').value);
-      const espessura = document.getElementById('espessuraVidro').value;
+  async function calcular() {
+  const sistema = document.getElementById('sistema').value;
+  const x = parseFloat(document.getElementById('x').value);
+  const c = parseFloat(document.getElementById('c').value);
+  const nf = parseInt(document.getElementById('nf').value);
+  const npSelecionado = document.getElementById('np').value;
+  const a = parseInt(document.getElementById('a').value);
+  const b = parseInt(document.getElementById('b').value);
+  const espessura = document.getElementById('espessuraVidro').value;
 
-      const nt = nf - 1;
-      const h = c - 20;
+  const nt = nf - 1;
+  const h = c - 20;
 
-      let resultadoHTML = `
-        <h3 class='font-bold text-lg mb-4'>Resultado:</h3>
-        <div class="grid md:grid-cols-2 gap-6 text-sm">
-          <div>
-            <h4 class="font-semibold text-blue-800 mb-2">Dados fornecidos:</h4>
-            Largura total do vão: <strong>${x} mm</strong><br>
-            Altura total do vão: <strong>${c} mm</strong><br>
-            Número de folhas: <strong>${nf}</strong><br>
-            Sistema: <strong>${sistema === '252' ? 'BX-252 / BX-253' : 'BX-254 / BX-255'}</strong><br>
-            Espessura do vidro: <strong>${espessura}</strong><br>
-          </div>
-          <div>
-            <h4 class="font-semibold text-green-800 mb-2">Cálculos:</h4>
-            Altura da folha (H): <strong>${h.toFixed(2)} mm</strong><br>`;
+  let resultadoHTML = `
+    <h3 class='font-bold text-lg mb-4'>Resultado:</h3>
+    <div class="grid md:grid-cols-2 gap-6 text-sm">
+      <div>
+        <h4 class="font-semibold text-blue-800 mb-2">Dados fornecidos:</h4>
+        Largura total do vão: <strong>${x} mm</strong><br>
+        Altura total do vão: <strong>${c} mm</strong><br>
+        Número de folhas: <strong>${nf}</strong><br>
+        Sistema: <strong>${sistema === '252' ? 'BX-252 / BX-253' : 'BX-254 / BX-255'}</strong><br>
+        Espessura do vidro: <strong>${espessura}</strong><br>
+        Tipo de acessórios: <strong>${b === 90 ? 'Somente fechadura (90mm)' : 'Fechadura + puxador (120mm)'}</strong><br>
+      </div>
+      <div>
+        <h4 class="font-semibold text-green-800 mb-2">Cálculos:</h4>
+        Altura da folha (H): <strong>${h.toFixed(2)} mm</strong><br>`;
+
 
       if (npSelecionado === 'central') {
         if (sistema === '252') {
