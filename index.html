@@ -28,19 +28,19 @@
     }
 
     .modal-alert {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: #fff;
-  padding: 24px;
-  border: 2px solid #ccc;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  z-index: 9999;
-  max-width: 90%;
-  text-align: center;
-}
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      padding: 24px;
+      border: 2px solid #ccc;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 9999;
+      max-width: 90%;
+      text-align: center;
+    }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
@@ -111,7 +111,6 @@
 
     <button id="btnSalvarPDF" onclick="salvarPDF()" class="hidden mt-4 w-full bg-green-700 text-white font-semibold py-2 px-4 rounded hover:bg-green-800">Salvar resultado em PDF</button>
   </div>
-
   <script>
     const svgMap = {
       '252': {
@@ -206,14 +205,12 @@
       }
 
       resultadoHTML += `</div></div>`;
-
       const svgPath = svgMap[sistema][npSelecionado];
       const svgHTML = await carregarSVG(svgPath);
 
       document.querySelector('#resultado > div').innerHTML = resultadoHTML + svgHTML;
       document.getElementById('btnSalvarPDF').classList.remove('hidden');
     }
-
     async function salvarPDF() {
       if (window.innerWidth <= 768) {
         const alerta = document.createElement('div');
