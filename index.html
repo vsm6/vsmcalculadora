@@ -11,6 +11,36 @@
     .nowrap-parens {
       white-space: nowrap;
     }
+
+    @media (max-width: 768px) {
+      #resultado {
+        margin: 0 auto;
+        text-align: center;
+        padding: 10px;
+      }
+
+      #resultado svg {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 0 auto;
+      }
+    }
+
+    .modal-alert {
+      position: fixed;
+      top: 20%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      padding: 24px;
+      border: 2px solid #ccc;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 9999;
+      max-width: 90%;
+      text-align: center;
+    }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
@@ -64,6 +94,13 @@
           <option value="120">Fechadura + puxador (120mm)</option>
         </select>
       </div>
+      <div>
+        <label for="espessuraVidro" class="font-semibold">Espessura do vidro:</label>
+        <select id="espessuraVidro" class="mt-1 p-2 border rounded w-full">
+          <option value="8mm">8mm</option>
+          <option value="10mm">10mm</option>
+        </select>
+      </div>
     </div>
 
     <button onclick="calcular()" class="mt-6 w-full bg-blue-800 text-white font-semibold py-2 px-4 rounded hover:bg-blue-900">Calcular</button>
@@ -104,6 +141,7 @@
       const npSelecionado = document.getElementById('np').value;
       const a = parseInt(document.getElementById('a').value);
       const b = parseInt(document.getElementById('b').value);
+      const espessura = document.getElementById('espessuraVidro').value;
 
       const nt = nf - 1;
       const h = c - 20;
@@ -117,6 +155,7 @@
             Altura total do vão: <strong>${c} mm</strong><br>
             Número de folhas: <strong>${nf}</strong><br>
             Sistema: <strong>${sistema === '252' ? 'BX-252 / BX-253' : 'BX-254 / BX-255'}</strong><br>
+            Espessura do vidro: <strong>${espessura}</strong><br>
           </div>
           <div>
             <h4 class="font-semibold text-green-800 mb-2">Cálculos:</h4>
@@ -166,7 +205,7 @@
         }
       }
 
-      resultadoHTML += `</div></div>`; // fecha colunas
+      resultadoHTML += `</div></div>`;
 
       const svgPath = svgMap[sistema][npSelecionado];
       const svgHTML = await carregarSVG(svgPath);
@@ -176,6 +215,18 @@
     }
 
     async function salvarPDF() {
+      if (window.innerWidth <= 768) {
+        const alerta = document.createElement('div');
+        alerta.className = 'modal-alert';
+        alerta.innerHTML = `
+          <p class="text-gray-800 mb-4 font-semibold">A geração de PDF não está disponível em dispositivos móveis.</p>
+          <p class="text-sm text-gray-600">Você pode fazer uma captura de tela (print) ou utilizar um computador para salvar o PDF.</p>
+          <button onclick="this.parentElement.remove()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">Fechar</button>
+        `;
+        document.body.appendChild(alerta);
+        return;
+      }
+
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF('p', 'mm', 'a4');
       const pageWidth = doc.internal.pageSize.getWidth();
