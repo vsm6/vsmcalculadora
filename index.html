@@ -214,68 +214,81 @@
       document.getElementById('btnSalvarPDF').classList.remove('hidden');
     }
     async function salvarPDF() {
-      if (window.innerWidth <= 768) {
-        const alerta = document.createElement('div');
-        alerta.className = 'modal-alert';
-        alerta.innerHTML = `
-          <p class="text-gray-800 mb-4 font-semibold">A geração de PDF não está disponível em dispositivos móveis.</p>
-          <p class="text-sm text-gray-600">Você pode fazer uma captura de tela (print) ou utilizar um computador para salvar o PDF.</p>
-          <button onclick="this.parentElement.remove()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">Fechar</button>
-        `;
-        document.body.appendChild(alerta);
-        return;
-      }
+  if (window.innerWidth <= 768) {
+    const alerta = document.createElement('div');
+    alerta.className = 'modal-alert';
+    alerta.innerHTML = `
+      <p class="text-gray-800 mb-4 font-semibold">A geração de PDF não está disponível em dispositivos móveis.</p>
+      <p class="text-sm text-gray-600">Você pode fazer uma captura de tela (print) ou utilizar um computador para salvar o PDF.</p>
+      <button onclick="this.parentElement.remove()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">Fechar</button>
+    `;
+    document.body.appendChild(alerta);
+    return;
+  }
 
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('p', 'mm', 'a4');
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
+  // Mostra modal "Gerando PDF..."
+  const loading = document.createElement('div');
+  loading.className = 'modal-alert';
+  loading.innerHTML = `<p class="text-gray-800 font-semibold">Gerando PDF, por favor aguarde...</p>`;
+  document.body.appendChild(loading);
 
-      const resultado = document.getElementById('resultado');
-      const logo = document.getElementById('logoVSM');
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
 
-      if (!logo.complete) {
-        await new Promise(resolve => logo.onload = resolve);
-      }
+    const resultado = document.getElementById('resultado');
+    const logo = document.getElementById('logoVSM');
 
-      const canvasLogo = document.createElement('canvas');
-      canvasLogo.width = logo.width;
-      canvasLogo.height = logo.height;
-      const ctx = canvasLogo.getContext('2d');
-      ctx.drawImage(logo, 0, 0);
-      const logoData = canvasLogo.toDataURL('image/png');
-
-      doc.addImage(logoData, 'PNG', 15, 10, 50, 20);
-      doc.setFontSize(16);
-      doc.text("Calculadora Stanley Invertido VSM", 15, 35);
-
-      const canvasResultado = await html2canvas(resultado, {
-        scale: 2,
-        backgroundColor: "#ffffff",
-        useCORS: true,
-        windowWidth: document.body.scrollWidth,
-      });
-
-      const imgData = canvasResultado.toDataURL('image/png');
-      const imgProps = canvasResultado.width / canvasResultado.height;
-
-      const imgWidth = pageWidth - 30;
-      const imgHeight = imgWidth / imgProps;
-
-      const topMargin = 40;
-      const bottomMargin = 10;
-
-      if (imgHeight > pageHeight - topMargin - bottomMargin) {
-        const maxHeight = pageHeight - topMargin - bottomMargin;
-        const adjustedWidth = maxHeight * imgProps;
-        const x = (pageWidth - adjustedWidth) / 2;
-        doc.addImage(imgData, 'PNG', x, topMargin, adjustedWidth, maxHeight);
-      } else {
-        doc.addImage(imgData, 'PNG', 15, topMargin, imgWidth, imgHeight);
-      }
-
-      doc.save('resultado_stanley_completo.pdf');
+    if (!logo.complete) {
+      await new Promise(resolve => logo.onload = resolve);
     }
+
+    const canvasLogo = document.createElement('canvas');
+    canvasLogo.width = logo.width;
+    canvasLogo.height = logo.height;
+    const ctx = canvasLogo.getContext('2d');
+    ctx.drawImage(logo, 0, 0);
+    const logoData = canvasLogo.toDataURL('image/png');
+
+    doc.addImage(logoData, 'PNG', 15, 10, 50, 20);
+    doc.setFontSize(16);
+    doc.text("Calculadora Stanley Invertido VSM", 15, 35);
+
+    const canvasResultado = await html2canvas(resultado, {
+      scale: 1.5, // Reduzido para melhorar desempenho
+      backgroundColor: "#ffffff",
+      useCORS: true,
+      windowWidth: document.body.scrollWidth,
+    });
+
+    const imgData = canvasResultado.toDataURL('image/png');
+    const imgProps = canvasResultado.width / canvasResultado.height;
+
+    const imgWidth = pageWidth - 30;
+    const imgHeight = imgWidth / imgProps;
+
+    const topMargin = 40;
+    const bottomMargin = 10;
+
+    if (imgHeight > pageHeight - topMargin - bottomMargin) {
+      const maxHeight = pageHeight - topMargin - bottomMargin;
+      const adjustedWidth = maxHeight * imgProps;
+      const x = (pageWidth - adjustedWidth) / 2;
+      doc.addImage(imgData, 'PNG', x, topMargin, adjustedWidth, maxHeight);
+    } else {
+      doc.addImage(imgData, 'PNG', 15, topMargin, imgWidth, imgHeight);
+    }
+
+    doc.save('resultado_stanley_completo.pdf');
+  } catch (error) {
+    alert("Ocorreu um erro ao gerar o PDF.");
+    console.error(error);
+  } finally {
+    document.body.removeChild(loading);
+  }
+}
   </script>
 </body>
 </html>
