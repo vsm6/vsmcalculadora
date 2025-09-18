@@ -245,7 +245,7 @@
 
         // Renderiza resultado em alta resolução
         const canvasResultado = await html2canvas(resultado, {
-          scale: 2, // aumenta a qualidade
+          scale: window.devicePixelRatio || 2, // nitidez adaptada ao dispositivo
           backgroundColor: "#ffffff",
           useCORS: true,
           windowWidth: document.body.scrollWidth,
@@ -264,25 +264,30 @@
           const maxHeight = pageHeight - topMargin - bottomMargin;
           const adjustedWidth = maxHeight * imgProps;
           const x = (pageWidth - adjustedWidth) / 2;
-          doc.addImage(imgData, 'JPEG', x, topMargin, adjustedWidth, maxHeight, undefined, 'FAST');
+          doc.addImage(imgData, 'JPEG', x, topMargin, adjustedWidth, maxHeight, undefined, 'SLOW');
         } else {
-          doc.addImage(imgData, 'JPEG', 15, topMargin, imgWidth, imgHeight, undefined, 'FAST');
+          doc.addImage(imgData, 'JPEG', 15, topMargin, imgWidth, imgHeight, undefined, 'SLOW');
         }
 
-        // Abre em nova aba
-        const pdfBlob = doc.output("blob");
-        const pdfUrl = URL.createObjectURL(pdfBlob);
+        if (window.innerWidth <= 768) {
+          // Mobile → abre em nova aba
+          const pdfBlob = doc.output("blob");
+          const pdfUrl = URL.createObjectURL(pdfBlob);
 
-        const newWindow = window.open();
-        newWindow.document.write(`
-          <html>
-            <head><title>Resultado PDF</title></head>
-            <body style="font-family: sans-serif; text-align: center; padding: 20px;">
-              <h2>Resultado Calculadora</h2>
-              <iframe src="${pdfUrl}" width="100%" height="500px" style="border:1px solid #ccc;"></iframe>
-            </body>
-          </html>
-        `);
+          const newWindow = window.open();
+          newWindow.document.write(`
+            <html>
+              <head><title>Resultado PDF</title></head>
+              <body style="font-family: sans-serif; text-align: center; padding: 20px;">
+                <h2>Resultado Calculadora</h2>
+                <iframe src="${pdfUrl}" width="100%" height="500px" style="border:1px solid #ccc;"></iframe>
+              </body>
+            </html>
+          `);
+        } else {
+          // Desktop → baixa automático
+          doc.save('resultado_stanley_completo.pdf');
+        }
       } catch (error) {
         alert("Ocorreu um erro ao gerar o PDF.");
         console.error(error);
