@@ -132,35 +132,34 @@
         .catch(() => `<p class="text-red-600 mt-4">Erro ao carregar o desenho técnico.</p>`);
     }
 
-  async function calcular() {
-  const sistema = document.getElementById('sistema').value;
-  const x = parseFloat(document.getElementById('x').value);
-  const c = parseFloat(document.getElementById('c').value);
-  const nf = parseInt(document.getElementById('nf').value);
-  const npSelecionado = document.getElementById('np').value;
-  const a = parseInt(document.getElementById('a').value);
-  const b = parseInt(document.getElementById('b').value);
-  const espessura = document.getElementById('espessuraVidro').value;
+    async function calcular() {
+      const sistema = document.getElementById('sistema').value;
+      const x = parseFloat(document.getElementById('x').value);
+      const c = parseFloat(document.getElementById('c').value);
+      const nf = parseInt(document.getElementById('nf').value);
+      const npSelecionado = document.getElementById('np').value;
+      const a = parseInt(document.getElementById('a').value);
+      const b = parseInt(document.getElementById('b').value);
+      const espessura = document.getElementById('espessuraVidro').value;
 
-  const nt = nf - 1;
-  const h = c - 20;
+      const nt = nf - 1;
+      const h = c - 20;
 
-  let resultadoHTML = `
-    <h3 class='font-bold text-lg mb-4'>Resultado:</h3>
-    <div class="grid md:grid-cols-2 gap-6 text-sm">
-      <div>
-        <h4 class="font-semibold text-blue-800 mb-2">Dados fornecidos:</h4>
-        Largura total do vão: <strong>${x} mm</strong><br>
-        Altura total do vão: <strong>${c} mm</strong><br>
-        Número de folhas: <strong>${nf}</strong><br>
-        Sistema: <strong>${sistema === '252' ? 'BX-252 / BX-253' : 'BX-254 / BX-255'}</strong><br>
-        Espessura do vidro: <strong>${espessura}</strong><br>
-        Tipo de acessórios: <strong>${b === 90 ? 'Somente fechadura (90mm)' : 'Fechadura + puxador (120mm)'}</strong><br>
-      </div>
-      <div>
-        <h4 class="font-semibold text-green-800 mb-2">Cálculos:</h4>
-        Altura da folha (H): <strong>${h.toFixed(2)} mm</strong><br>`;
-
+      let resultadoHTML = `
+        <h3 class='font-bold text-lg mb-4'>Resultado:</h3>
+        <div class="grid md:grid-cols-2 gap-6 text-sm">
+          <div>
+            <h4 class="font-semibold text-blue-800 mb-2">Dados fornecidos:</h4>
+            Largura total do vão: <strong>${x} mm</strong><br>
+            Altura total do vão: <strong>${c} mm</strong><br>
+            Número de folhas: <strong>${nf}</strong><br>
+            Sistema: <strong>${sistema === '252' ? 'BX-252 / BX-253' : 'BX-254 / BX-255'}</strong><br>
+            Espessura do vidro: <strong>${espessura}</strong><br>
+            Tipo de acessórios: <strong>${b === 90 ? 'Somente fechadura (90mm)' : 'Fechadura + puxador (120mm)'}</strong><br>
+          </div>
+          <div>
+            <h4 class="font-semibold text-green-800 mb-2">Cálculos:</h4>
+            Altura da folha (H): <strong>${h.toFixed(2)} mm</strong><br>`;
 
       if (npSelecionado === 'central') {
         if (sistema === '252') {
@@ -213,82 +212,78 @@
       document.querySelector('#resultado > div').innerHTML = resultadoHTML + svgHTML;
       document.getElementById('btnSalvarPDF').classList.remove('hidden');
     }
+
     async function salvarPDF() {
-  if (window.innerWidth <= 768) {
-    const alerta = document.createElement('div');
-    alerta.className = 'modal-alert';
-    alerta.innerHTML = `
-      <p class="text-gray-800 mb-4 font-semibold">A geração de PDF não está disponível em dispositivos móveis.</p>
-      <p class="text-sm text-gray-600">Você pode fazer uma captura de tela (print) ou utilizar um computador para salvar o PDF.</p>
-      <button onclick="this.parentElement.remove()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">Fechar</button>
-    `;
-    document.body.appendChild(alerta);
-    return;
-  }
+      // Mostra modal "Gerando PDF..."
+      const loading = document.createElement('div');
+      loading.className = 'modal-alert';
+      loading.innerHTML = `<p class="text-gray-800 font-semibold">Gerando PDF, por favor aguarde...</p>`;
+      document.body.appendChild(loading);
 
-  // Mostra modal "Gerando PDF..."
-  const loading = document.createElement('div');
-  loading.className = 'modal-alert';
-  loading.innerHTML = `<p class="text-gray-800 font-semibold">Gerando PDF, por favor aguarde...</p>`;
-  document.body.appendChild(loading);
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
 
-  try {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p', 'mm', 'a4');
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
+        const resultado = document.getElementById('resultado');
+        const logo = document.getElementById('logoVSM');
 
-    const resultado = document.getElementById('resultado');
-    const logo = document.getElementById('logoVSM');
+        if (!logo.complete) {
+          await new Promise(resolve => logo.onload = resolve);
+        }
 
-    if (!logo.complete) {
-      await new Promise(resolve => logo.onload = resolve);
+        const canvasLogo = document.createElement('canvas');
+        canvasLogo.width = logo.width;
+        canvasLogo.height = logo.height;
+        const ctx = canvasLogo.getContext('2d');
+        ctx.drawImage(logo, 0, 0);
+        const logoData = canvasLogo.toDataURL('image/png');
+
+        doc.addImage(logoData, 'PNG', 15, 10, 50, 20);
+        doc.setFontSize(16);
+        doc.text("Calculadora Stanley Invertido VSM", 15, 35);
+
+        const canvasResultado = await html2canvas(resultado, {
+          scale: 1.5,
+          backgroundColor: "#ffffff",
+          useCORS: true,
+          windowWidth: document.body.scrollWidth,
+        });
+
+        const imgData = canvasResultado.toDataURL('image/png');
+        const imgProps = canvasResultado.width / canvasResultado.height;
+
+        const imgWidth = pageWidth - 30;
+        const imgHeight = imgWidth / imgProps;
+
+        const topMargin = 40;
+        const bottomMargin = 10;
+
+        if (imgHeight > pageHeight - topMargin - bottomMargin) {
+          const maxHeight = pageHeight - topMargin - bottomMargin;
+          const adjustedWidth = maxHeight * imgProps;
+          const x = (pageWidth - adjustedWidth) / 2;
+          doc.addImage(imgData, 'PNG', x, topMargin, adjustedWidth, maxHeight);
+        } else {
+          doc.addImage(imgData, 'PNG', 15, topMargin, imgWidth, imgHeight);
+        }
+
+        // Verifica se é celular (largura menor que 768px)
+        if (window.innerWidth <= 768) {
+          // Abre o PDF em nova aba
+          window.open(doc.output('bloburl'));
+        } else {
+          // Baixa automático no desktop
+          doc.save('resultado_stanley_completo.pdf');
+        }
+      } catch (error) {
+        alert("Ocorreu um erro ao gerar o PDF.");
+        console.error(error);
+      } finally {
+        document.body.removeChild(loading);
+      }
     }
-
-    const canvasLogo = document.createElement('canvas');
-    canvasLogo.width = logo.width;
-    canvasLogo.height = logo.height;
-    const ctx = canvasLogo.getContext('2d');
-    ctx.drawImage(logo, 0, 0);
-    const logoData = canvasLogo.toDataURL('image/png');
-
-    doc.addImage(logoData, 'PNG', 15, 10, 50, 20);
-    doc.setFontSize(16);
-    doc.text("Calculadora Stanley Invertido VSM", 15, 35);
-
-    const canvasResultado = await html2canvas(resultado, {
-      scale: 1.5, // Reduzido para melhorar desempenho
-      backgroundColor: "#ffffff",
-      useCORS: true,
-      windowWidth: document.body.scrollWidth,
-    });
-
-    const imgData = canvasResultado.toDataURL('image/png');
-    const imgProps = canvasResultado.width / canvasResultado.height;
-
-    const imgWidth = pageWidth - 30;
-    const imgHeight = imgWidth / imgProps;
-
-    const topMargin = 40;
-    const bottomMargin = 10;
-
-    if (imgHeight > pageHeight - topMargin - bottomMargin) {
-      const maxHeight = pageHeight - topMargin - bottomMargin;
-      const adjustedWidth = maxHeight * imgProps;
-      const x = (pageWidth - adjustedWidth) / 2;
-      doc.addImage(imgData, 'PNG', x, topMargin, adjustedWidth, maxHeight);
-    } else {
-      doc.addImage(imgData, 'PNG', 15, topMargin, imgWidth, imgHeight);
-    }
-
-    doc.save('resultado_stanley_completo.pdf');
-  } catch (error) {
-    alert("Ocorreu um erro ao gerar o PDF.");
-    console.error(error);
-  } finally {
-    document.body.removeChild(loading);
-  }
-}
   </script>
 </body>
 </html>
