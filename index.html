@@ -214,6 +214,7 @@
     }
 
     async function salvarPDF() {
+      // Mostra modal "Gerando PDF..."
       const loading = document.createElement('div');
       loading.className = 'modal-alert';
       loading.innerHTML = `<p class="text-gray-800 font-semibold">Gerando PDF, por favor aguarde...</p>`;
@@ -268,27 +269,12 @@
           doc.addImage(imgData, 'PNG', 15, topMargin, imgWidth, imgHeight);
         }
 
+        // Verifica se é celular (largura menor que 768px)
         if (window.innerWidth <= 768) {
-          // versão mobile: abrir aba com botão baixar
-          const pdfBlob = doc.output("blob");
-          const pdfUrl = URL.createObjectURL(pdfBlob);
-
-          const newWindow = window.open();
-          newWindow.document.write(`
-            <html>
-              <head><title>Resultado PDF</title></head>
-              <body style="font-family: sans-serif; text-align: center; padding: 20px;">
-                <h2>Resultado Calculadora</h2>
-                <iframe src="${pdfUrl}" width="100%" height="500px" style="border:1px solid #ccc;"></iframe>
-                <br><br>
-                <a href="${pdfUrl}" download="resultado_stanley_completo.pdf" 
-                   style="display:inline-block; padding:10px 20px; background:#2563eb; color:#fff; text-decoration:none; border-radius:8px;">
-                  Baixar PDF
-                </a>
-              </body>
-            </html>
-          `);
+          // Abre o PDF em nova aba
+          window.open(doc.output('bloburl'));
         } else {
+          // Baixa automático no desktop
           doc.save('resultado_stanley_completo.pdf');
         }
       } catch (error) {
