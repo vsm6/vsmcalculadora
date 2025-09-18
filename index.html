@@ -214,7 +214,6 @@
     }
 
     async function salvarPDF() {
-      // Mostra modal "Gerando PDF..."
       const loading = document.createElement('div');
       loading.className = 'modal-alert';
       loading.innerHTML = `<p class="text-gray-800 font-semibold">Gerando PDF, por favor aguarde...</p>`;
@@ -244,14 +243,15 @@
         doc.setFontSize(16);
         doc.text("Calculadora Stanley Invertido VSM", 15, 35);
 
+        // Renderiza resultado em alta resolução
         const canvasResultado = await html2canvas(resultado, {
-          scale: 1.5,
+          scale: 2, // aumenta a qualidade
           backgroundColor: "#ffffff",
           useCORS: true,
           windowWidth: document.body.scrollWidth,
         });
 
-        const imgData = canvasResultado.toDataURL('image/png');
+        const imgData = canvasResultado.toDataURL('image/jpeg', 1.0); // JPEG alta qualidade
         const imgProps = canvasResultado.width / canvasResultado.height;
 
         const imgWidth = pageWidth - 30;
@@ -264,19 +264,25 @@
           const maxHeight = pageHeight - topMargin - bottomMargin;
           const adjustedWidth = maxHeight * imgProps;
           const x = (pageWidth - adjustedWidth) / 2;
-          doc.addImage(imgData, 'PNG', x, topMargin, adjustedWidth, maxHeight);
+          doc.addImage(imgData, 'JPEG', x, topMargin, adjustedWidth, maxHeight, undefined, 'FAST');
         } else {
-          doc.addImage(imgData, 'PNG', 15, topMargin, imgWidth, imgHeight);
+          doc.addImage(imgData, 'JPEG', 15, topMargin, imgWidth, imgHeight, undefined, 'FAST');
         }
 
-        // Verifica se é celular (largura menor que 768px)
-        if (window.innerWidth <= 768) {
-          // Abre o PDF em nova aba
-          window.open(doc.output('bloburl'));
-        } else {
-          // Baixa automático no desktop
-          doc.save('resultado_stanley_completo.pdf');
-        }
+        // Abre em nova aba
+        const pdfBlob = doc.output("blob");
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+
+        const newWindow = window.open();
+        newWindow.document.write(`
+          <html>
+            <head><title>Resultado PDF</title></head>
+            <body style="font-family: sans-serif; text-align: center; padding: 20px;">
+              <h2>Resultado Calculadora</h2>
+              <iframe src="${pdfUrl}" width="100%" height="500px" style="border:1px solid #ccc;"></iframe>
+            </body>
+          </html>
+        `);
       } catch (error) {
         alert("Ocorreu um erro ao gerar o PDF.");
         console.error(error);
