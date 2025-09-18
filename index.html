@@ -269,26 +269,25 @@
         }
 
         if (window.innerWidth <= 768) {
-          // versão mobile: compartilhar PDF
+          // versão mobile: abrir aba com botão baixar
           const pdfBlob = doc.output("blob");
-          const pdfFile = new File([pdfBlob], "resultado_stanley_completo.pdf", { type: "application/pdf" });
+          const pdfUrl = URL.createObjectURL(pdfBlob);
 
-          if (navigator.share && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-            await navigator.share({
-              title: "Resultado Calculadora VSM",
-              text: "Confira o PDF gerado pela Calculadora Stanley Invertido VSM.",
-              files: [pdfFile]
-            });
-          } else {
-            // fallback: download se não suportar share
-            const pdfUrl = URL.createObjectURL(pdfBlob);
-            const a = document.createElement("a");
-            a.href = pdfUrl;
-            a.download = "resultado_stanley_completo.pdf";
-            a.click();
-            URL.revokeObjectURL(pdfUrl);
-            alert("Seu navegador não suporta compartilhamento. O PDF foi baixado.");
-          }
+          const newWindow = window.open();
+          newWindow.document.write(`
+            <html>
+              <head><title>Resultado PDF</title></head>
+              <body style="font-family: sans-serif; text-align: center; padding: 20px;">
+                <h2>Resultado Calculadora</h2>
+                <iframe src="${pdfUrl}" width="100%" height="500px" style="border:1px solid #ccc;"></iframe>
+                <br><br>
+                <a href="${pdfUrl}" download="resultado_stanley_completo.pdf" 
+                   style="display:inline-block; padding:10px 20px; background:#2563eb; color:#fff; text-decoration:none; border-radius:8px;">
+                  Baixar PDF
+                </a>
+              </body>
+            </html>
+          `);
         } else {
           doc.save('resultado_stanley_completo.pdf');
         }
