@@ -251,17 +251,6 @@
     }
 
     async function salvarPDF() {
-      if (window.innerWidth <= 768) {
-        const alerta = document.createElement('div');
-        alerta.className = 'modal-alert';
-        alerta.innerHTML = `
-          <p class="text-gray-800 mb-4 font-semibold">A geração de PDF não está disponível em dispositivos móveis.</p>
-          <p class="text-sm text-gray-600">Use um computador para salvar o PDF.</p>
-          <button onclick="this.parentElement.remove()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">Fechar</button>`;
-        document.body.appendChild(alerta);
-        return;
-      }
-
       const loading = document.createElement('div');
       loading.className = 'modal-alert';
       loading.innerHTML = `<p class="text-gray-800 font-semibold">Gerando PDF, por favor aguarde...</p>`;
@@ -290,7 +279,7 @@
         doc.text("Calculadora Stanley Invertido VSM", 15, 35);
 
         const canvasResultado = await html2canvas(resultado, {
-          scale: 1.5,
+          scale: 1.2,
           backgroundColor: "#ffffff",
           useCORS: true,
           windowWidth: document.body.scrollWidth,
@@ -313,7 +302,19 @@
           doc.addImage(imgData, 'PNG', 15, topMargin, imgWidth, imgHeight);
         }
 
-        doc.save('resultado_stanley_completo.pdf');
+        // ✅ Compatível com Android e iOS
+        if (navigator.userAgent.match(/Android|iPhone|iPad|iPod/i)) {
+          const pdfBlob = doc.output('blob');
+          const blobUrl = URL.createObjectURL(pdfBlob);
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = 'resultado_stanley.pdf';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        } else {
+          doc.save('resultado_stanley.pdf');
+        }
       } catch (error) {
         alert("Ocorreu um erro ao gerar o PDF.");
         console.error(error);
