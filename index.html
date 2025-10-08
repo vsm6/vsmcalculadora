@@ -8,9 +8,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
-    .nowrap-parens {
-      white-space: nowrap;
-    }
+    .nowrap-parens { white-space: nowrap; }
 
     @media (max-width: 768px) {
       #resultado {
@@ -43,6 +41,7 @@
     }
   </style>
 </head>
+
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
 
   <div class="flex justify-center mb-6 w-full">
@@ -61,11 +60,11 @@
         </select>
       </div>
       <div>
-        <label for="x" class="font-semibold">Largura total do vão (em mm):</label>
+        <label for="x" class="font-semibold">Largura total do vão (mm):</label>
         <input type="number" id="x" class="mt-1 p-2 border rounded w-full" />
       </div>
       <div>
-        <label for="c" class="font-semibold">Altura total do vão (em mm):</label>
+        <label for="c" class="font-semibold">Altura total do vão (mm):</label>
         <input type="number" id="c" class="mt-1 p-2 border rounded w-full" />
       </div>
       <div>
@@ -78,6 +77,7 @@
           <option value="1">1 folha com acessórios</option>
           <option value="2">2 folhas com acessórios</option>
           <option value="central">Fechamento Central</option>
+          <option value="central-fechaduras">Fechamento Central + Fechaduras Laterais</option>
         </select>
       </div>
       <div>
@@ -111,17 +111,20 @@
 
     <button id="btnSalvarPDF" onclick="salvarPDF()" class="hidden mt-4 w-full bg-green-700 text-white font-semibold py-2 px-4 rounded hover:bg-green-800">Salvar resultado em PDF</button>
   </div>
+
   <script>
     const svgMap = {
       '252': {
         '1': 'bx252-253 se 1 folha com acessório.svg',
         '2': 'bx252-253 se 2 folhas com acessórios.svg',
-        'central': 'bx252-253 se fechamento central.svg'
+        'central': 'bx252-253 se fechamento central.svg',
+        'central-fechaduras': 'bx252-253 se fechamento central + fechaduras laterais.svg'
       },
       '254': {
         '1': 'bx254-255 se 1 folha com acessório.svg',
         '2': 'bx254-255 se 2 folhas com acessórios.svg',
-        'central': 'bx254-255 se fechamento central.svg'
+        'central': 'bx254-255 se fechamento central.svg',
+        'central-fechaduras': 'bx254-255 se fechamento central + fechaduras laterais.svg'
       }
     };
 
@@ -161,7 +164,37 @@
             <h4 class="font-semibold text-green-800 mb-2">Cálculos:</h4>
             Altura da folha (H): <strong>${h.toFixed(2)} mm</strong><br>`;
 
-      if (npSelecionado === 'central') {
+      // ➕ Fechamento Central + Fechaduras Laterais
+      if (npSelecionado === 'central-fechaduras') {
+        if (sistema === '252') {
+          let l;
+          if (a === 10) {
+            l = (x + ((nf - 2) * 15) - 30) / nf;
+          } else {
+            l = (x + ((nf - 2) * 15) - 40) / nf;
+          }
+          resultadoHTML += `Largura das folhas (Fechamento Central + Fechaduras Laterais) (L): <strong>${l.toFixed(2)} mm</strong><br>`;
+        } else {
+          let l1;
+          if (a === 10) {
+            l1 = x + ((nf - 2) * 20) - 30;
+          } else {
+            l1 = x + ((nf - 2) * 20) - 40;
+          }
+
+          const l2 = (l1 - (b * 4)) / nf;
+          const l3 = l2 + b;
+          const maiores = 4;
+          const menores = nf - 4;
+
+          resultadoHTML += `Pele de vidro total (L1): <strong>${l1.toFixed(2)} mm</strong><br>`;
+          resultadoHTML += `Tamanho das folhas menores (L2): <strong>${l2.toFixed(2)} mm</strong> <span class="nowrap-parens">(${menores} folhas)</span><br>`;
+          resultadoHTML += `Tamanho das folhas maiores (L3): <strong>${l3.toFixed(2)} mm</strong> <span class="nowrap-parens">(${maiores} folhas)</span><br>`;
+        }
+      }
+
+      // ➕ Fechamento Central
+      else if (npSelecionado === 'central') {
         if (sistema === '252') {
           const l = (x + ((nf - 2) * 15) - 30) / nf;
           resultadoHTML += `Largura das folhas (Fechamento Central) (L): <strong>${l.toFixed(2)} mm</strong><br>`;
@@ -176,7 +209,10 @@
           resultadoHTML += `Tamanho das folhas menores (L2): <strong>${l2.toFixed(2)} mm</strong> <span class="nowrap-parens">(${menores} folhas)</span><br>`;
           resultadoHTML += `Tamanho das folhas maiores (L3): <strong>${l3.toFixed(2)} mm</strong> <span class="nowrap-parens">(${maiores} folhas)</span><br>`;
         }
-      } else {
+      }
+
+      // ➕ 1 ou 2 folhas com acessórios
+      else {
         const np = parseInt(npSelecionado);
         if (sistema === '252') {
           let l;
@@ -196,8 +232,8 @@
 
           const l2 = (l1 - (b * np)) / nf;
           const l3 = l2 + b;
-          const maiores = np === 1 ? 1 : 2;
-          const menores = nf - maiores;
+          const maiores = np;
+          const menores = nf - np;
 
           resultadoHTML += `Pele de vidro total (L1): <strong>${l1.toFixed(2)} mm</strong><br>`;
           resultadoHTML += `Tamanho das folhas menores (L2): <strong>${l2.toFixed(2)} mm</strong> <span class="nowrap-parens">(${menores} folhas)</span><br>`;
@@ -206,6 +242,7 @@
       }
 
       resultadoHTML += `</div></div>`;
+
       const svgPath = svgMap[sistema][npSelecionado];
       const svgHTML = await carregarSVG(svgPath);
 
@@ -214,6 +251,17 @@
     }
 
     async function salvarPDF() {
+      if (window.innerWidth <= 768) {
+        const alerta = document.createElement('div');
+        alerta.className = 'modal-alert';
+        alerta.innerHTML = `
+          <p class="text-gray-800 mb-4 font-semibold">A geração de PDF não está disponível em dispositivos móveis.</p>
+          <p class="text-sm text-gray-600">Use um computador para salvar o PDF.</p>
+          <button onclick="this.parentElement.remove()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">Fechar</button>`;
+        document.body.appendChild(alerta);
+        return;
+      }
+
       const loading = document.createElement('div');
       loading.className = 'modal-alert';
       loading.innerHTML = `<p class="text-gray-800 font-semibold">Gerando PDF, por favor aguarde...</p>`;
@@ -228,9 +276,7 @@
         const resultado = document.getElementById('resultado');
         const logo = document.getElementById('logoVSM');
 
-        if (!logo.complete) {
-          await new Promise(resolve => logo.onload = resolve);
-        }
+        if (!logo.complete) await new Promise(resolve => logo.onload = resolve);
 
         const canvasLogo = document.createElement('canvas');
         canvasLogo.width = logo.width;
@@ -243,17 +289,15 @@
         doc.setFontSize(16);
         doc.text("Calculadora Stanley Invertido VSM", 15, 35);
 
-        // Renderiza resultado em alta resolução
         const canvasResultado = await html2canvas(resultado, {
-          scale: window.devicePixelRatio || 2,
+          scale: 1.5,
           backgroundColor: "#ffffff",
           useCORS: true,
           windowWidth: document.body.scrollWidth,
         });
 
-        const imgData = canvasResultado.toDataURL('image/jpeg', 1.0);
+        const imgData = canvasResultado.toDataURL('image/png');
         const imgProps = canvasResultado.width / canvasResultado.height;
-
         const imgWidth = pageWidth - 30;
         const imgHeight = imgWidth / imgProps;
 
@@ -264,14 +308,12 @@
           const maxHeight = pageHeight - topMargin - bottomMargin;
           const adjustedWidth = maxHeight * imgProps;
           const x = (pageWidth - adjustedWidth) / 2;
-          doc.addImage(imgData, 'JPEG', x, topMargin, adjustedWidth, maxHeight, undefined, 'SLOW');
+          doc.addImage(imgData, 'PNG', x, topMargin, adjustedWidth, maxHeight);
         } else {
-          doc.addImage(imgData, 'JPEG', 15, topMargin, imgWidth, imgHeight, undefined, 'SLOW');
+          doc.addImage(imgData, 'PNG', 15, topMargin, imgWidth, imgHeight);
         }
 
-        // Download automático em qualquer dispositivo
         doc.save('resultado_stanley_completo.pdf');
-
       } catch (error) {
         alert("Ocorreu um erro ao gerar o PDF.");
         console.error(error);
