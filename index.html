@@ -289,6 +289,11 @@
       /* ---- NOVA REGRA: Altura > 3000mm ---- */
       if (c > 3000) {
         addKSC();
+        const svgPath = svgMap[sistema][npSelecionado];
+        const svgHTML = await carregarSVG(svgPath);
+        document.querySelector('#resultado > div').innerHTML = resultadoHTML + svgHTML;
+        document.getElementById('btnSalvarPDF').classList.remove('hidden');
+        return; // interrompe aqui — não mostra kits
       }
 
       /* ---- Regras existentes ---- */
@@ -297,7 +302,7 @@
       }
 
       /* ---- Recomendações de kit ---- */
-      // (254/255) + (8mm) + (2 folhas com acessórios)
+      // (restante da lógica de kits permanece igual, pois só roda se c <= 3000)
       if (sistema === '254' && espessura === '8mm' && npSelecionado === '2') {
         const sizes = kitWidthsByLeaves[nf];
         const chosenMax = pickKitSizeFromList(sizes, x);
@@ -313,7 +318,6 @@
         } else { addKSC(); }
       }
 
-      // (254/255) + (8mm) + (1 folha com acessórios)
       if (sistema === '254' && espessura === '8mm' && npSelecionado === '1') {
         const corrers = Math.max(1, nf - 1);
         const sizes = kitWidths1FByCorrer[corrers];
@@ -330,7 +334,6 @@
         } else { addKSC(); }
       }
 
-      // (254/255) + (8mm) + (Fechamento Central)
       if (sistema === '254' && espessura === '8mm' && npSelecionado === 'central') {
         const sizes = kitWidthsCentralByNF[nf];
         let family = nf === 4 ? 'SIPC2F2C' : nf === 6 ? 'SIPC2F4C' : nf === 8 ? 'SIPC2F6C' : null;
@@ -348,7 +351,6 @@
         } else { addKSC(); }
       }
 
-      // (254/255) + (8mm) + (Fechamento Central + Fechaduras Laterais)
       if (sistema === '254' && espessura === '8mm' && npSelecionado === 'central-fechaduras') {
         const sizes = kitWidthsCentralFechadurasByNF[nf];
         let family = nf === 6 ? 'SIPC6FC' : nf === 8 ? 'SIPC8FC' : null;
