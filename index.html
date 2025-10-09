@@ -75,17 +75,17 @@
       </div>
 
       <div>
-        <label for="np" class="font-semibold">Tipo de Fechamento:</label>
+        <label for="np" class="font-semibold">Folhas com acessórios:</label>
         <select id="np" class="mt-1 p-2 border rounded w-full">
-          <option value="1">Fechadura Lateral + 1 Fixo</option>
-          <option value="2">Fechaduras Laterais</option>
-          <option value="central">Fechamento Central + 2 Fixos</option>
+          <option value="1">1 folha com acessórios</option>
+          <option value="2">2 folhas com acessórios</option>
+          <option value="central">Fechamento Central</option>
           <option value="central-fechaduras">Fechamento Central + Fechaduras Laterais</option>
         </select>
       </div>
 
       <div>
-        <label for="a" class="font-semibold">Modelo de Contra Fechadura:</label>
+        <label for="a" class="font-semibold">Perfil do sistema:</label>
         <select id="a" class="mt-1 p-2 border rounded w-full">
           <option value="15">Sem recorte (15mm)</option>
           <option value="10">Com recorte (10mm)</option>
@@ -93,7 +93,7 @@
       </div>
 
       <div>
-        <label for="b" class="font-semibold">Acessórios da Porta Móvel:</label>
+        <label for="b" class="font-semibold">Tipo de acessórios:</label>
         <select id="b" class="mt-1 p-2 border rounded w-full">
           <option value="90">Somente fechadura (90mm)</option>
           <option value="120">Fechadura + puxador (120mm)</option>
@@ -145,6 +145,7 @@
     };
 
     /* ============== TABELAS DE KITS ============== */
+
     const kitWidthsByLeaves = {
       2: [1500, 2000, 3000],
       3: [2000, 3000, 4000],
@@ -173,9 +174,10 @@
     };
 
     /* ============== HELPERS ============== */
+
     function widthLabel(mm) {
       const m = (mm / 1000).toFixed(2).replace('.', ',');
-      return \`\${m}X3,00\`;
+      return `${m}X3,00`;
     }
 
     function pickKitSizeFromList(sizes, larguraMm) {
@@ -189,8 +191,8 @@
     function carregarSVG(path) {
       return fetch(path)
         .then(res => res.text())
-        .then(svg => \`<div class="mt-4 border rounded p-2">\${svg}</div>\`)
-        .catch(() => \`<p class="text-red-600 mt-4">Erro ao carregar o desenho técnico.</p>\`);
+        .then(svg => `<div class="mt-4 border rounded p-2">${svg}</div>`)
+        .catch(() => `<p class="text-red-600 mt-4">Erro ao carregar o desenho técnico.</p>`);
     }
 
     async function calcular() {
@@ -207,31 +209,31 @@
       const nt = nf - 1;
       const h = c - 20;
 
-      let resultadoHTML = \`
+      let resultadoHTML = `
         <h3 class='font-bold text-lg mb-4'>Resultado:</h3>
         <div class="grid md:grid-cols-2 gap-6 text-sm">
           <div>
             <h4 class="font-semibold text-blue-800 mb-2">Dados fornecidos:</h4>
-            Largura total do vão: <strong>\${x} mm</strong><br>
-            Altura total do vão: <strong>\${c} mm</strong><br>
-            Número de folhas: <strong>\${nf}</strong><br>
-            Sistema: <strong>\${sistema === '252' ? 'BX-252 / BX-253' : 'BX-254 / BX-255'}</strong><br>
-            Espessura do vidro: <strong>\${espessura}</strong><br>
-            Acessórios da Porta Móvel: <strong>\${b === 90 ? 'Somente fechadura (90mm)' : 'Fechadura + puxador (120mm)'}</strong><br>
-            Cor do Projeto: <strong>\${cor}</strong><br>
+            Largura total do vão: <strong>${x} mm</strong><br>
+            Altura total do vão: <strong>${c} mm</strong><br>
+            Número de folhas: <strong>${nf}</strong><br>
+            Sistema: <strong>${sistema === '252' ? 'BX-252 / BX-253' : 'BX-254 / BX-255'}</strong><br>
+            Espessura do vidro: <strong>${espessura}</strong><br>
+            Tipo de acessórios: <strong>${b === 90 ? 'Somente fechadura (90mm)' : 'Fechadura + puxador (120mm)'}</strong><br>
+            Cor do Projeto: <strong>${cor}</strong><br>
           </div>
           <div>
             <h4 class="font-semibold text-green-800 mb-2">Cálculos:</h4>
-            Altura da folha (H): <strong>\${h.toFixed(2)} mm</strong><br>\`;
+            Altura da folha (H): <strong>${h.toFixed(2)} mm</strong><br>`;
 
-      // Evita duplicar o "KIT SOB CONSULTA"
+      // utilitário p/ não duplicar "KIT SOB CONSULTA"
       let kitSobConsultaShown = false;
       const addKSC = () => {
         if (!kitSobConsultaShown) {
-          resultadoHTML += \`
+          resultadoHTML += `
             <div class="mt-4 p-3 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 font-semibold rounded">
               KIT SOB CONSULTA
-            </div>\`;
+            </div>`;
           kitSobConsultaShown = true;
         }
       };
@@ -242,7 +244,7 @@
           let l = (a === 10)
             ? (x + ((nf - 2) * 15) - 30) / nf
             : (x + ((nf - 2) * 15) - 40) / nf;
-          resultadoHTML += \`Largura das folhas (Fechamento Central + Fechaduras Laterais) (L): <strong>\${l.toFixed(2)} mm</strong><br>\`;
+          resultadoHTML += `Largura das folhas (Fechamento Central + Fechaduras Laterais) (L): <strong>${l.toFixed(2)} mm</strong><br>`;
         } else {
           let l1 = (a === 10)
             ? x + ((nf - 2) * 20) - 30
@@ -250,22 +252,22 @@
           const l2 = (l1 - (b * 4)) / nf;
           const l3 = l2 + b;
           const maiores = 4, menores = nf - 4;
-          resultadoHTML += \`Pele de vidro total (L1): <strong>\${l1.toFixed(2)} mm</strong><br>\`;
-          resultadoHTML += \`Tamanho das folhas menores (L2): <strong>\${l2.toFixed(2)} mm</strong> <span class="nowrap-parens">(\${menores} folhas)</span><br>\`;
-          resultadoHTML += \`Tamanho das folhas maiores (L3): <strong>\${l3.toFixed(2)} mm</strong> <span class="nowrap-parens">(\${maiores} folhas)</span><br>\`;
+          resultadoHTML += `Pele de vidro total (L1): <strong>${l1.toFixed(2)} mm</strong><br>`;
+          resultadoHTML += `Tamanho das folhas menores (L2): <strong>${l2.toFixed(2)} mm</strong> <span class="nowrap-parens">(${menores} folhas)</span><br>`;
+          resultadoHTML += `Tamanho das folhas maiores (L3): <strong>${l3.toFixed(2)} mm</strong> <span class="nowrap-parens">(${maiores} folhas)</span><br>`;
         }
       } else if (npSelecionado === 'central') {
         if (sistema === '252') {
           const l = (x + ((nf - 2) * 15) - 30) / nf;
-          resultadoHTML += \`Largura das folhas (Fechamento Central + 2 Fixos) (L): <strong>\${l.toFixed(2)} mm</strong><br>\`;
+          resultadoHTML += `Largura das folhas (Fechamento Central) (L): <strong>${l.toFixed(2)} mm</strong><br>`;
         } else {
           const l1 = x + ((nf - 2) * 20) - 30;
           const l2 = (l1 - (b * 2)) / nf;
           const l3 = l2 + b;
           const maiores = 2, menores = nf - 2;
-          resultadoHTML += \`Pele de vidro total (L1): <strong>\${l1.toFixed(2)} mm</strong><br>\`;
-          resultadoHTML += \`Tamanho das folhas menores (L2): <strong>\${l2.toFixed(2)} mm</strong> <span class="nowrap-parens">(\${menores} folhas)</span><br>\`;
-          resultadoHTML += \`Tamanho das folhas maiores (L3): <strong>\${l3.toFixed(2)} mm</strong> <span class="nowrap-parens">(\${maiores} folhas)</span><br>\`;
+          resultadoHTML += `Pele de vidro total (L1): <strong>${l1.toFixed(2)} mm</strong><br>`;
+          resultadoHTML += `Tamanho das folhas menores (L2): <strong>${l2.toFixed(2)} mm</strong> <span class="nowrap-parens">(${menores} folhas)</span><br>`;
+          resultadoHTML += `Tamanho das folhas maiores (L3): <strong>${l3.toFixed(2)} mm</strong> <span class="nowrap-parens">(${maiores} folhas)</span><br>`;
         }
       } else {
         const np = parseInt(npSelecionado);
@@ -273,8 +275,7 @@
           let l = (np === 1)
             ? (x + (nt * 15) - a - 10) / nf
             : (x + (nt * 15) - (a * 2)) / nf;
-          // Aqui as opções são "Fechadura Lateral + 1 Fixo" (1) e "Fechaduras Laterais" (2)
-          resultadoHTML += \`Largura da folha (L): <strong>\${l.toFixed(2)} mm</strong><br>\`;
+          resultadoHTML += `Largura da folha (L): <strong>${l.toFixed(2)} mm</strong><br>`;
         } else {
           let l1 = (np === 1)
             ? x + (nt * 20) - a - 10
@@ -282,70 +283,70 @@
           const l2 = (l1 - (b * np)) / nf;
           const l3 = l2 + b;
           const maiores = np, menores = nf - np;
-          resultadoHTML += \`Pele de vidro total (L1): <strong>\${l1.toFixed(2)} mm</strong><br>\`;
-          resultadoHTML += \`Tamanho das folhas menores (L2): <strong>\${l2.toFixed(2)} mm</strong> <span class="nowrap-parens">(\${menores} folhas)</span><br>\`;
-          resultadoHTML += \`Tamanho das folhas maiores (L3): <strong>\${l3.toFixed(2)} mm</strong> <span class="nowrap-parens">(\${maiores} folhas)</span><br>\`;
+          resultadoHTML += `Pele de vidro total (L1): <strong>${l1.toFixed(2)} mm</strong><br>`;
+          resultadoHTML += `Tamanho das folhas menores (L2): <strong>${l2.toFixed(2)} mm</strong> <span class="nowrap-parens">(${menores} folhas)</span><br>`;
+          resultadoHTML += `Tamanho das folhas maiores (L3): <strong>${l3.toFixed(2)} mm</strong> <span class="nowrap-parens">(${maiores} folhas)</span><br>`;
         }
       }
 
-      // Fecha a grid dos cálculos
-      resultadoHTML += \`</div></div>\`;
+      // fecha grid (mantém layout dos cálculos corretos)
+      resultadoHTML += `</div></div>`;
 
-      /* ---- Regra: Altura > 3000mm -> apenas "KIT SOB CONSULTA" ---- */
+      /* ---- NOVA REGRA: Altura > 3000mm -> só KSC e encerra ---- */
       if (c > 3000) {
         addKSC();
         const svgPath = svgMap[sistema][npSelecionado];
         const svgHTML = await carregarSVG(svgPath);
         document.querySelector('#resultado > div').innerHTML = resultadoHTML + svgHTML;
         document.getElementById('btnSalvarPDF').classList.remove('hidden');
-        return;
+        return; // impede qualquer indicação de kit
       }
 
-      /* ---- Observações de compatibilidade ---- */
+      /* ---- Regras existentes de observação ---- */
       if (sistema === '252' || espessura === '10mm') {
         addKSC();
       }
 
-      /* ---- Recomendações de kit (se c <= 3000) ---- */
+      /* ---- Recomendações de kit (só chegam aqui se c <= 3000) ---- */
 
-      // (254/255) + (8mm) + (2 -> "Fechaduras Laterais") -> SIPC{nf}C
+      // (254/255) + (8mm) + (2 folhas com acessórios) -> SIPC{nf}C
       if (sistema === '254' && espessura === '8mm' && npSelecionado === '2') {
         const sizes = kitWidthsByLeaves[nf];
         const chosenMax = pickKitSizeFromList(sizes, x);
         if (chosenMax) {
-          const prefix = \`SIPC\${nf}C\`;
+          const prefix = `SIPC${nf}C`;
           const etiqueta = widthLabel(chosenMax);
-          const codigo = \`\${prefix} \${etiqueta} \${cor}\`;
-          resultadoHTML += \`
+          const codigo = `${prefix} ${etiqueta} ${cor}`;
+          resultadoHTML += `
             <div class="mt-4 p-3 bg-blue-50 border-l-4 border-blue-500 text-blue-900 rounded">
               <div class="font-semibold">Kit recomendado:</div>
-              <div class="text-lg font-bold">\${codigo}</div>
-            </div>\`;
+              <div class="text-lg font-bold">${codigo}</div>
+            </div>`;
         } else {
           addKSC();
         }
       }
 
-      // (254/255) + (8mm) + (1 -> "Fechadura Lateral + 1 Fixo") -> SIPC1F{corrers}C
+      // (254/255) + (8mm) + (1 folha com acessórios) -> SIPC1F{nf-1}C
       if (sistema === '254' && espessura === '8mm' && npSelecionado === '1') {
         const corrers = Math.max(1, nf - 1);
         const sizes = kitWidths1FByCorrer[corrers];
         const chosenMax = pickKitSizeFromList(sizes, x);
         if (chosenMax) {
-          const prefix = \`SIPC1F\${corrers}C\`;
+          const prefix = `SIPC1F${corrers}C`;
           const etiqueta = widthLabel(chosenMax);
-          const codigo = \`\${prefix} \${etiqueta} \${cor}\`;
-          resultadoHTML += \`
+          const codigo = `${prefix} ${etiqueta} ${cor}`;
+          resultadoHTML += `
             <div class="mt-4 p-3 bg-blue-50 border-l-4 border-blue-500 text-blue-900 rounded">
               <div class="font-semibold">Kit recomendado:</div>
-              <div class="text-lg font-bold">\${codigo}</div>
-            </div>\`;
+              <div class="text-lg font-bold">${codigo}</div>
+            </div>`;
         } else {
           addKSC();
         }
       }
 
-      // (254/255) + (8mm) + (central -> "Fechamento Central + 2 Fixos") -> SIPC2F{...}
+      // (254/255) + (8mm) + (Fechamento Central) -> SIPC2F{corrers}C (nf=4,6,8)
       if (sistema === '254' && espessura === '8mm' && npSelecionado === 'central') {
         const sizes = kitWidthsCentralByNF[nf];
         let family = null;
@@ -357,12 +358,12 @@
           const chosenMax = pickKitSizeFromList(sizes, x);
           if (chosenMax) {
             const etiqueta = widthLabel(chosenMax);
-            const codigo = \`\${family} \${etiqueta} \${cor}\`;
-            resultadoHTML += \`
+            const codigo = `${family} ${etiqueta} ${cor}`;
+            resultadoHTML += `
               <div class="mt-4 p-3 bg-blue-50 border-l-4 border-blue-500 text-blue-900 rounded">
                 <div class="font-semibold">Kit recomendado:</div>
-                <div class="text-lg font-bold">\${codigo}</div>
-              </div>\`;
+                <div class="text-lg font-bold">${codigo}</div>
+              </div>`;
           } else {
             addKSC();
           }
@@ -371,7 +372,7 @@
         }
       }
 
-      // (254/255) + (8mm) + ("Fechamento Central + Fechaduras Laterais") -> SIPC6FC / SIPC8FC (nf=6,8)
+      // (254/255) + (8mm) + (Fechamento Central + Fechaduras Laterais) -> SIPC6FC / SIPC8FC (nf=6,8)
       if (sistema === '254' && espessura === '8mm' && npSelecionado === 'central-fechaduras') {
         const sizes = kitWidthsCentralFechadurasByNF[nf];
         let family = null;
@@ -382,12 +383,12 @@
           const chosenMax = pickKitSizeFromList(sizes, x);
           if (chosenMax) {
             const etiqueta = widthLabel(chosenMax);
-            const codigo = \`\${family} \${etiqueta} \${cor}\`;
-            resultadoHTML += \`
+            const codigo = `${family} ${etiqueta} ${cor}`;
+            resultadoHTML += `
               <div class="mt-4 p-3 bg-blue-50 border-l-4 border-blue-500 text-blue-900 rounded">
                 <div class="font-semibold">Kit recomendado:</div>
-                <div class="text-lg font-bold">\${codigo}</div>
-              </div>\`;
+                <div class="text-lg font-bold">${codigo}</div>
+              </div>`;
           } else {
             addKSC();
           }
@@ -406,7 +407,7 @@
     async function salvarPDF() {
       const loading = document.createElement('div');
       loading.className = 'modal-alert';
-      loading.innerHTML = \`<p class="text-gray-800 font-semibold">Gerando PDF, por favor aguarde...</p>\`;
+      loading.innerHTML = `<p class="text-gray-800 font-semibold">Gerando PDF, por favor aguarde...</p>`;
       document.body.appendChild(loading);
 
       try {
