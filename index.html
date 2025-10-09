@@ -187,7 +187,7 @@
     function carregarSVG(path) {
       return fetch(path)
         .then(res => res.text())
-        .then(svg => `<div class="mt-4 border rounded p-2">${svg}</div>`)
+        .then(svg => `<div class="mt-4 flex justify-center">${svg}</div>`)
         .catch(() => `<p class="text-red-600 mt-4">Erro ao carregar o desenho técnico.</p>`);
     }
 
@@ -227,9 +227,10 @@
           </div>`;
       };
 
-      // ⚠️ REGRA: altura > 3000 = apenas KIT SOB CONSULTA
+      // 🔸 Se altura > 3000mm → mostra apenas o aviso
       if (c > 3000) {
         addKSC();
+        resultadoHTML += `</div></div>`;
         const svgPath = svgMap[sistema][npSelecionado];
         const svgHTML = await carregarSVG(svgPath);
         document.querySelector('#resultado > div').innerHTML = resultadoHTML + svgHTML;
@@ -237,10 +238,12 @@
         return;
       }
 
-      // ⚙️ Regras existentes
+      // ⚙️ Regras adicionais
       if (sistema === '252' || espessura === '10mm') {
         addKSC();
       }
+
+      resultadoHTML += `</div></div>`;
 
       /* --- Regras de recomendação de kit --- */
       // (254/255) + (8mm) + (2 folhas)
