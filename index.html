@@ -202,7 +202,6 @@
       const espessura = document.getElementById('espessuraVidro').value;
       const cor = document.getElementById('corProjeto').value;
 
-      const nt = nf - 1;
       const h = c - 20;
 
       let resultadoHTML = `
@@ -212,97 +211,39 @@
             <h4 class="font-semibold text-blue-800 mb-2">Dados fornecidos:</h4>
             Largura total do vão: <strong>${x} mm</strong><br>
             Altura total do vão: <strong>${c} mm</strong><br>
-            Número de folhas: <strong>${nf}</strong><br>
             Sistema: <strong>${sistema === '252' ? 'BX-252 / BX-253' : 'BX-254 / BX-255'}</strong><br>
             Espessura do vidro: <strong>${espessura}</strong><br>
-            Tipo de acessórios: <strong>${b === 90 ? 'Somente fechadura (90mm)' : 'Fechadura + puxador (120mm)'}</strong><br>
             Cor do Projeto: <strong>${cor}</strong><br>
           </div>
           <div>
             <h4 class="font-semibold text-green-800 mb-2">Cálculos:</h4>
-            Altura da folha (H): <strong>${h.toFixed(2)} mm</strong><br>`;
+            Altura da folha (H): <strong>${h.toFixed(2)} mm</strong><br>
+      `;
 
-      let kitSobConsultaShown = false;
       const addKSC = () => {
-        if (!kitSobConsultaShown) {
-          resultadoHTML += `
-            <div class="mt-4 p-3 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 font-semibold rounded">
-              KIT SOB CONSULTA
-            </div>`;
-          kitSobConsultaShown = true;
-        }
+        resultadoHTML += `
+          <div class="mt-4 p-3 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 font-semibold rounded">
+            KIT SOB CONSULTA
+          </div>`;
       };
 
-      /* ---- Cálculos ---- */
-      if (npSelecionado === 'central-fechaduras') {
-        if (sistema === '252') {
-          let l = (a === 10)
-            ? (x + ((nf - 2) * 15) - 30) / nf
-            : (x + ((nf - 2) * 15) - 40) / nf;
-          resultadoHTML += `Largura das folhas (Fechamento Central + Fechaduras Laterais) (L): <strong>${l.toFixed(2)} mm</strong><br>`;
-        } else {
-          let l1 = (a === 10)
-            ? x + ((nf - 2) * 20) - 30
-            : x + ((nf - 2) * 20) - 40;
-          const l2 = (l1 - (b * 4)) / nf;
-          const l3 = l2 + b;
-          const maiores = 4, menores = nf - 4;
-          resultadoHTML += `Pele de vidro total (L1): <strong>${l1.toFixed(2)} mm</strong><br>`;
-          resultadoHTML += `Tamanho das folhas menores (L2): <strong>${l2.toFixed(2)} mm</strong> <span class="nowrap-parens">(${menores} folhas)</span><br>`;
-          resultadoHTML += `Tamanho das folhas maiores (L3): <strong>${l3.toFixed(2)} mm</strong> <span class="nowrap-parens">(${maiores} folhas)</span><br>`;
-        }
-      } else if (npSelecionado === 'central') {
-        if (sistema === '252') {
-          const l = (x + ((nf - 2) * 15) - 30) / nf;
-          resultadoHTML += `Largura das folhas (Fechamento Central) (L): <strong>${l.toFixed(2)} mm</strong><br>`;
-        } else {
-          const l1 = x + ((nf - 2) * 20) - 30;
-          const l2 = (l1 - (b * 2)) / nf;
-          const l3 = l2 + b;
-          const maiores = 2, menores = nf - 2;
-          resultadoHTML += `Pele de vidro total (L1): <strong>${l1.toFixed(2)} mm</strong><br>`;
-          resultadoHTML += `Tamanho das folhas menores (L2): <strong>${l2.toFixed(2)} mm</strong> <span class="nowrap-parens">(${menores} folhas)</span><br>`;
-          resultadoHTML += `Tamanho das folhas maiores (L3): <strong>${l3.toFixed(2)} mm</strong> <span class="nowrap-parens">(${maiores} folhas)</span><br>`;
-        }
-      } else {
-        const np = parseInt(npSelecionado);
-        if (sistema === '252') {
-          let l = (np === 1)
-            ? (x + (nf - 1) * 15 - a - 10) / nf
-            : (x + (nf - 1) * 15 - (a * 2)) / nf;
-          resultadoHTML += `Largura da folha (L): <strong>${l.toFixed(2)} mm</strong><br>`;
-        } else {
-          let l1 = (np === 1)
-            ? x + ((nf - 1) * 20) - a - 10
-            : x + ((nf - 1) * 20) - 2 * a;
-          const l2 = (l1 - (b * np)) / nf;
-          const l3 = l2 + b;
-          const maiores = np, menores = nf - np;
-          resultadoHTML += `Pele de vidro total (L1): <strong>${l1.toFixed(2)} mm</strong><br>`;
-          resultadoHTML += `Tamanho das folhas menores (L2): <strong>${l2.toFixed(2)} mm</strong> <span class="nowrap-parens">(${menores} folhas)</span><br>`;
-          resultadoHTML += `Tamanho das folhas maiores (L3): <strong>${l3.toFixed(2)} mm</strong> <span class="nowrap-parens">(${maiores} folhas)</span><br>`;
-        }
-      }
-
-      resultadoHTML += `</div></div>`;
-
-      /* ---- NOVA REGRA: Altura > 3000mm ---- */
+      // ⚠️ REGRA: altura > 3000 = apenas KIT SOB CONSULTA
       if (c > 3000) {
         addKSC();
         const svgPath = svgMap[sistema][npSelecionado];
         const svgHTML = await carregarSVG(svgPath);
         document.querySelector('#resultado > div').innerHTML = resultadoHTML + svgHTML;
         document.getElementById('btnSalvarPDF').classList.remove('hidden');
-        return; // interrompe aqui — não mostra kits
+        return;
       }
 
-      /* ---- Regras existentes ---- */
+      // ⚙️ Regras existentes
       if (sistema === '252' || espessura === '10mm') {
         addKSC();
       }
 
-      /* ---- Recomendações de kit ---- */
-      // (restante da lógica de kits permanece igual, pois só roda se c <= 3000)
+      /* --- Regras de recomendação de kit --- */
+      // (254/255) + (8mm) + (2 folhas)
       if (sistema === '254' && espessura === '8mm' && npSelecionado === '2') {
         const sizes = kitWidthsByLeaves[nf];
         const chosenMax = pickKitSizeFromList(sizes, x);
@@ -318,6 +259,7 @@
         } else { addKSC(); }
       }
 
+      // (254/255) + (8mm) + (1 folha)
       if (sistema === '254' && espessura === '8mm' && npSelecionado === '1') {
         const corrers = Math.max(1, nf - 1);
         const sizes = kitWidths1FByCorrer[corrers];
@@ -334,6 +276,7 @@
         } else { addKSC(); }
       }
 
+      // Fechamento Central
       if (sistema === '254' && espessura === '8mm' && npSelecionado === 'central') {
         const sizes = kitWidthsCentralByNF[nf];
         let family = nf === 4 ? 'SIPC2F2C' : nf === 6 ? 'SIPC2F4C' : nf === 8 ? 'SIPC2F6C' : null;
@@ -351,6 +294,7 @@
         } else { addKSC(); }
       }
 
+      // Fechamento Central + Fechaduras Laterais
       if (sistema === '254' && espessura === '8mm' && npSelecionado === 'central-fechaduras') {
         const sizes = kitWidthsCentralFechadurasByNF[nf];
         let family = nf === 6 ? 'SIPC6FC' : nf === 8 ? 'SIPC8FC' : null;
