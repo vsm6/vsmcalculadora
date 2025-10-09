@@ -108,7 +108,6 @@
         </select>
       </div>
 
-      <!-- Cor do Projeto -->
       <div>
         <label for="corProjeto" class="font-semibold">Cor do Projeto:</label>
         <select id="corProjeto" class="mt-1 p-2 border rounded w-full">
@@ -145,9 +144,6 @@
       }
     };
 
-    /* ============== TABELAS DE KITS ============== */
-
-    // 2 folhas com acessórios (SIPC{nf}C)
     const kitWidthsByLeaves = {
       2: [1500, 2000, 3000],
       3: [2000, 3000, 4000],
@@ -156,7 +152,6 @@
       6: [4000, 6000, 8000, 9000]
     };
 
-    // 1 folha com acessórios (SIPC1F{corrers}C), corrers = nf - 1
     const kitWidths1FByCorrer = {
       1: [1500, 2000, 3000],
       2: [2000, 3000, 4000, 4500],
@@ -165,20 +160,16 @@
       5: [4000, 6000, 8000, 9000]
     };
 
-    // Fechamento Central (SIPC2F{corrers}C) — nf = 4, 6, 8
     const kitWidthsCentralByNF = {
-      4: [2000, 3000, 4000, 6000],                        // SIPC2F2C
-      6: [3000, 4000, 6000, 8000, 9000],                  // SIPC2F4C
-      8: [4000, 6000, 8000, 9000, 11000, 12000]           // SIPC2F6C
+      4: [2000, 3000, 4000, 6000],
+      6: [3000, 4000, 6000, 8000, 9000],
+      8: [4000, 6000, 8000, 9000, 11000, 12000]
     };
 
-    // Fechamento Central + Fechaduras Laterais (nf = 6, 8)
     const kitWidthsCentralFechadurasByNF = {
-      6: [4000, 6000, 8000, 9000],                        // SIPC6FC
-      8: [4000, 6000, 8000, 9000, 11000, 12000]           // SIPC8FC
+      6: [4000, 6000, 8000, 9000],
+      8: [4000, 6000, 8000, 9000, 11000, 12000]
     };
-
-    /* ============== HELPERS ============== */
 
     function widthLabel(mm) {
       const m = (mm / 1000).toFixed(2).replace('.', ',');
@@ -231,7 +222,6 @@
             <h4 class="font-semibold text-green-800 mb-2">Cálculos:</h4>
             Altura da folha (H): <strong>${h.toFixed(2)} mm</strong><br>`;
 
-      // utilitário p/ não duplicar "KIT SOB CONSULTA"
       let kitSobConsultaShown = false;
       const addKSC = () => {
         if (!kitSobConsultaShown) {
@@ -243,7 +233,7 @@
         }
       };
 
-      /* ---- Cálculos L/L1/L2/L3 conforme seleção ---- */
+      /* ---- Cálculos ---- */
       if (npSelecionado === 'central-fechaduras') {
         if (sistema === '252') {
           let l = (a === 10)
@@ -278,13 +268,13 @@
         const np = parseInt(npSelecionado);
         if (sistema === '252') {
           let l = (np === 1)
-            ? (x + (nt * 15) - a - 10) / nf
-            : (x + (nt * 15) - (a * 2)) / nf;
+            ? (x + (nf - 1) * 15 - a - 10) / nf
+            : (x + (nf - 1) * 15 - (a * 2)) / nf;
           resultadoHTML += `Largura da folha (L): <strong>${l.toFixed(2)} mm</strong><br>`;
         } else {
           let l1 = (np === 1)
-            ? x + (nt * 20) - a - 10
-            : x + (nt * 20) - 2 * a;
+            ? x + ((nf - 1) * 20) - a - 10
+            : x + ((nf - 1) * 20) - 2 * a;
           const l2 = (l1 - (b * np)) / nf;
           const l3 = l2 + b;
           const maiores = np, menores = nf - np;
@@ -294,17 +284,20 @@
         }
       }
 
-      // fecha grid
       resultadoHTML += `</div></div>`;
 
-      /* ---- Observação KIT SOB CONSULTA (regras existentes) ---- */
+      /* ---- NOVA REGRA: Altura > 3000mm ---- */
+      if (c > 3000) {
+        addKSC();
+      }
+
+      /* ---- Regras existentes ---- */
       if (sistema === '252' || espessura === '10mm') {
         addKSC();
       }
 
       /* ---- Recomendações de kit ---- */
-
-      // (254/255) + (8mm) + (2 folhas com acessórios) -> SIPC{nf}C
+      // (254/255) + (8mm) + (2 folhas com acessórios)
       if (sistema === '254' && espessura === '8mm' && npSelecionado === '2') {
         const sizes = kitWidthsByLeaves[nf];
         const chosenMax = pickKitSizeFromList(sizes, x);
@@ -317,12 +310,10 @@
               <div class="font-semibold">Kit recomendado:</div>
               <div class="text-lg font-bold">${codigo}</div>
             </div>`;
-        } else {
-          addKSC();
-        }
+        } else { addKSC(); }
       }
 
-      // (254/255) + (8mm) + (1 folha com acessórios) -> SIPC1F{nf-1}C
+      // (254/255) + (8mm) + (1 folha com acessórios)
       if (sistema === '254' && espessura === '8mm' && npSelecionado === '1') {
         const corrers = Math.max(1, nf - 1);
         const sizes = kitWidths1FByCorrer[corrers];
@@ -336,19 +327,13 @@
               <div class="font-semibold">Kit recomendado:</div>
               <div class="text-lg font-bold">${codigo}</div>
             </div>`;
-        } else {
-          addKSC();
-        }
+        } else { addKSC(); }
       }
 
-      // (254/255) + (8mm) + (Fechamento Central) -> SIPC2F{corrers}C (nf=4,6,8)
+      // (254/255) + (8mm) + (Fechamento Central)
       if (sistema === '254' && espessura === '8mm' && npSelecionado === 'central') {
         const sizes = kitWidthsCentralByNF[nf];
-        let family = null;
-        if (nf === 4) family = 'SIPC2F2C';
-        if (nf === 6) family = 'SIPC2F4C';
-        if (nf === 8) family = 'SIPC2F6C';
-
+        let family = nf === 4 ? 'SIPC2F2C' : nf === 6 ? 'SIPC2F4C' : nf === 8 ? 'SIPC2F6C' : null;
         if (sizes && family) {
           const chosenMax = pickKitSizeFromList(sizes, x);
           if (chosenMax) {
@@ -359,21 +344,14 @@
                 <div class="font-semibold">Kit recomendado:</div>
                 <div class="text-lg font-bold">${codigo}</div>
               </div>`;
-          } else {
-            addKSC();
-          }
-        } else {
-          addKSC();
-        }
+          } else { addKSC(); }
+        } else { addKSC(); }
       }
 
-      // (254/255) + (8mm) + (Fechamento Central + Fechaduras Laterais) -> SIPC6FC / SIPC8FC (nf=6,8)
+      // (254/255) + (8mm) + (Fechamento Central + Fechaduras Laterais)
       if (sistema === '254' && espessura === '8mm' && npSelecionado === 'central-fechaduras') {
         const sizes = kitWidthsCentralFechadurasByNF[nf];
-        let family = null;
-        if (nf === 6) family = 'SIPC6FC';
-        if (nf === 8) family = 'SIPC8FC';
-
+        let family = nf === 6 ? 'SIPC6FC' : nf === 8 ? 'SIPC8FC' : null;
         if (sizes && family) {
           const chosenMax = pickKitSizeFromList(sizes, x);
           if (chosenMax) {
@@ -384,17 +362,12 @@
                 <div class="font-semibold">Kit recomendado:</div>
                 <div class="text-lg font-bold">${codigo}</div>
               </div>`;
-          } else {
-            addKSC();
-          }
-        } else {
-          addKSC();
-        }
+          } else { addKSC(); }
+        } else { addKSC(); }
       }
 
       const svgPath = svgMap[sistema][npSelecionado];
       const svgHTML = await carregarSVG(svgPath);
-
       document.querySelector('#resultado > div').innerHTML = resultadoHTML + svgHTML;
       document.getElementById('btnSalvarPDF').classList.remove('hidden');
     }
@@ -449,7 +422,6 @@
           doc.addImage(imgData, 'PNG', 15, topMargin, imgWidth, imgHeight);
         }
 
-        // Compatível com Android/iOS
         if (navigator.userAgent.match(/Android|iPhone|iPad|iPod/i)) {
           const pdfBlob = doc.output('blob');
           const blobUrl = URL.createObjectURL(pdfBlob);
