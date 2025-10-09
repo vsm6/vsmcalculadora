@@ -77,9 +77,9 @@
       <div>
         <label for="np" class="font-semibold">Tipo de Fechamento:</label>
         <select id="np" class="mt-1 p-2 border rounded w-full">
-          <option value="1">1 fechamento</option>
-          <option value="2">2 fechamentos</option>
-          <option value="central">Fechamento Central</option>
+          <option value="1">Fechadura Lateral + 1 Fixo</option>
+          <option value="2">Fechaduras Laterais</option>
+          <option value="central">Fechamento Central + 2 Fixos</option>
           <option value="central-fechaduras">Fechamento Central + Fechaduras Laterais</option>
         </select>
       </div>
@@ -145,7 +145,6 @@
     };
 
     /* ============== TABELAS DE KITS ============== */
-
     const kitWidthsByLeaves = {
       2: [1500, 2000, 3000],
       3: [2000, 3000, 4000],
@@ -174,10 +173,9 @@
     };
 
     /* ============== HELPERS ============== */
-
     function widthLabel(mm) {
       const m = (mm / 1000).toFixed(2).replace('.', ',');
-      return `${m}X3,00`;
+      return \`\${m}X3,00\`;
     }
 
     function pickKitSizeFromList(sizes, larguraMm) {
@@ -191,8 +189,8 @@
     function carregarSVG(path) {
       return fetch(path)
         .then(res => res.text())
-        .then(svg => `<div class="mt-4 border rounded p-2">${svg}</div>`)
-        .catch(() => `<p class="text-red-600 mt-4">Erro ao carregar o desenho técnico.</p>`);
+        .then(svg => \`<div class="mt-4 border rounded p-2">\${svg}</div>\`)
+        .catch(() => \`<p class="text-red-600 mt-4">Erro ao carregar o desenho técnico.</p>\`);
     }
 
     async function calcular() {
@@ -226,7 +224,7 @@
             <h4 class="font-semibold text-green-800 mb-2">Cálculos:</h4>
             Altura da folha (H): <strong>\${h.toFixed(2)} mm</strong><br>\`;
 
-      // utilitário p/ não duplicar "KIT SOB CONSULTA"
+      // Evita duplicar o "KIT SOB CONSULTA"
       let kitSobConsultaShown = false;
       const addKSC = () => {
         if (!kitSobConsultaShown) {
@@ -259,7 +257,7 @@
       } else if (npSelecionado === 'central') {
         if (sistema === '252') {
           const l = (x + ((nf - 2) * 15) - 30) / nf;
-          resultadoHTML += \`Largura das folhas (Fechamento Central) (L): <strong>\${l.toFixed(2)} mm</strong><br>\`;
+          resultadoHTML += \`Largura das folhas (Fechamento Central + 2 Fixos) (L): <strong>\${l.toFixed(2)} mm</strong><br>\`;
         } else {
           const l1 = x + ((nf - 2) * 20) - 30;
           const l2 = (l1 - (b * 2)) / nf;
@@ -275,6 +273,7 @@
           let l = (np === 1)
             ? (x + (nt * 15) - a - 10) / nf
             : (x + (nt * 15) - (a * 2)) / nf;
+          // Aqui as opções são "Fechadura Lateral + 1 Fixo" (1) e "Fechaduras Laterais" (2)
           resultadoHTML += \`Largura da folha (L): <strong>\${l.toFixed(2)} mm</strong><br>\`;
         } else {
           let l1 = (np === 1)
@@ -289,27 +288,27 @@
         }
       }
 
-      // fecha grid (mantém layout dos cálculos corretos)
+      // Fecha a grid dos cálculos
       resultadoHTML += \`</div></div>\`;
 
-      /* ---- NOVA REGRA: Altura > 3000mm -> só KSC e encerra ---- */
+      /* ---- Regra: Altura > 3000mm -> apenas "KIT SOB CONSULTA" ---- */
       if (c > 3000) {
         addKSC();
         const svgPath = svgMap[sistema][npSelecionado];
         const svgHTML = await carregarSVG(svgPath);
         document.querySelector('#resultado > div').innerHTML = resultadoHTML + svgHTML;
         document.getElementById('btnSalvarPDF').classList.remove('hidden');
-        return; // impede qualquer indicação de kit
+        return;
       }
 
-      /* ---- Regras existentes de observação ---- */
+      /* ---- Observações de compatibilidade ---- */
       if (sistema === '252' || espessura === '10mm') {
         addKSC();
       }
 
-      /* ---- Recomendações de kit (só chegam aqui se c <= 3000) ---- */
+      /* ---- Recomendações de kit (se c <= 3000) ---- */
 
-      // (254/255) + (8mm) + (2 fechamentos) -> SIPC{nf}C
+      // (254/255) + (8mm) + (2 -> "Fechaduras Laterais") -> SIPC{nf}C
       if (sistema === '254' && espessura === '8mm' && npSelecionado === '2') {
         const sizes = kitWidthsByLeaves[nf];
         const chosenMax = pickKitSizeFromList(sizes, x);
@@ -327,7 +326,7 @@
         }
       }
 
-      // (254/255) + (8mm) + (1 fechamento) -> SIPC1F{nf-1}C
+      // (254/255) + (8mm) + (1 -> "Fechadura Lateral + 1 Fixo") -> SIPC1F{corrers}C
       if (sistema === '254' && espessura === '8mm' && npSelecionado === '1') {
         const corrers = Math.max(1, nf - 1);
         const sizes = kitWidths1FByCorrer[corrers];
@@ -346,7 +345,7 @@
         }
       }
 
-      // (254/255) + (8mm) + (Fechamento Central) -> SIPC2F{corrers}C (nf=4,6,8)
+      // (254/255) + (8mm) + (central -> "Fechamento Central + 2 Fixos") -> SIPC2F{...}
       if (sistema === '254' && espessura === '8mm' && npSelecionado === 'central') {
         const sizes = kitWidthsCentralByNF[nf];
         let family = null;
@@ -372,7 +371,7 @@
         }
       }
 
-      // (254/255) + (8mm) + (Fechamento Central + Fechaduras Laterais) -> SIPC6FC / SIPC8FC (nf=6,8)
+      // (254/255) + (8mm) + ("Fechamento Central + Fechaduras Laterais") -> SIPC6FC / SIPC8FC (nf=6,8)
       if (sistema === '254' && espessura === '8mm' && npSelecionado === 'central-fechaduras') {
         const sizes = kitWidthsCentralFechadurasByNF[nf];
         let family = null;
