@@ -16,7 +16,6 @@
         text-align: center;
         padding: 10px;
       }
-
       #resultado svg {
         max-width: 100%;
         height: auto;
@@ -59,18 +58,22 @@
           <option value="254">BX-254 / BX-255 (Carregamento e Retorno)</option>
         </select>
       </div>
+
       <div>
         <label for="x" class="font-semibold">Largura total do vão (mm):</label>
         <input type="number" id="x" class="mt-1 p-2 border rounded w-full" />
       </div>
+
       <div>
         <label for="c" class="font-semibold">Altura total do vão (mm):</label>
         <input type="number" id="c" class="mt-1 p-2 border rounded w-full" />
       </div>
+
       <div>
         <label for="nf" class="font-semibold">Número de folhas:</label>
         <input type="number" id="nf" class="mt-1 p-2 border rounded w-full" />
       </div>
+
       <div>
         <label for="np" class="font-semibold">Folhas com acessórios:</label>
         <select id="np" class="mt-1 p-2 border rounded w-full">
@@ -80,6 +83,7 @@
           <option value="central-fechaduras">Fechamento Central + Fechaduras Laterais</option>
         </select>
       </div>
+
       <div>
         <label for="a" class="font-semibold">Perfil do sistema:</label>
         <select id="a" class="mt-1 p-2 border rounded w-full">
@@ -87,6 +91,7 @@
           <option value="10">Com recorte (10mm)</option>
         </select>
       </div>
+
       <div>
         <label for="b" class="font-semibold">Tipo de acessórios:</label>
         <select id="b" class="mt-1 p-2 border rounded w-full">
@@ -94,11 +99,23 @@
           <option value="120">Fechadura + puxador (120mm)</option>
         </select>
       </div>
+
       <div>
         <label for="espessuraVidro" class="font-semibold">Espessura do vidro:</label>
         <select id="espessuraVidro" class="mt-1 p-2 border rounded w-full">
           <option value="8mm">8mm</option>
           <option value="10mm">10mm</option>
+        </select>
+      </div>
+
+      <!-- Cor do Projeto -->
+      <div>
+        <label for="corProjeto" class="font-semibold">Cor do Projeto:</label>
+        <select id="corProjeto" class="mt-1 p-2 border rounded w-full">
+          <option value="BC">Branco (BC)</option>
+          <option value="BZ">Bronze (BZ)</option>
+          <option value="FS">Fosco (FS)</option>
+          <option value="PT">Preto (PT)</option>
         </select>
       </div>
     </div>
@@ -128,6 +145,54 @@
       }
     };
 
+    /* ============== TABELAS DE KITS ============== */
+
+    // 2 folhas com acessórios (SIPC{nf}C)
+    const kitWidthsByLeaves = {
+      2: [1500, 2000, 3000],
+      3: [2000, 3000, 4000],
+      4: [2000, 3000, 4000, 6000],
+      5: [3000, 4000, 6000, 7500],
+      6: [4000, 6000, 8000, 9000]
+    };
+
+    // 1 folha com acessórios (SIPC1F{corrers}C), corrers = nf - 1
+    const kitWidths1FByCorrer = {
+      1: [1500, 2000, 3000],
+      2: [2000, 3000, 4000, 4500],
+      3: [3000, 4000, 6000],
+      4: [3000, 4000, 6000, 7500],
+      5: [4000, 6000, 8000, 9000]
+    };
+
+    // Fechamento Central (SIPC2F{corrers}C) — nf = 4, 6, 8
+    const kitWidthsCentralByNF = {
+      4: [2000, 3000, 4000, 6000],                        // SIPC2F2C
+      6: [3000, 4000, 6000, 8000, 9000],                  // SIPC2F4C
+      8: [4000, 6000, 8000, 9000, 11000, 12000]           // SIPC2F6C
+    };
+
+    // Fechamento Central + Fechaduras Laterais (nf = 6, 8)
+    const kitWidthsCentralFechadurasByNF = {
+      6: [4000, 6000, 8000, 9000],                        // SIPC6FC
+      8: [4000, 6000, 8000, 9000, 11000, 12000]           // SIPC8FC
+    };
+
+    /* ============== HELPERS ============== */
+
+    function widthLabel(mm) {
+      const m = (mm / 1000).toFixed(2).replace('.', ',');
+      return `${m}X3,00`;
+    }
+
+    function pickKitSizeFromList(sizes, larguraMm) {
+      if (!sizes) return null;
+      for (const max of sizes) {
+        if (larguraMm <= max) return max;
+      }
+      return null;
+    }
+
     function carregarSVG(path) {
       return fetch(path)
         .then(res => res.text())
@@ -144,6 +209,7 @@
       const a = parseInt(document.getElementById('a').value);
       const b = parseInt(document.getElementById('b').value);
       const espessura = document.getElementById('espessuraVidro').value;
+      const cor = document.getElementById('corProjeto').value;
 
       const nt = nf - 1;
       const h = c - 20;
@@ -159,42 +225,43 @@
             Sistema: <strong>${sistema === '252' ? 'BX-252 / BX-253' : 'BX-254 / BX-255'}</strong><br>
             Espessura do vidro: <strong>${espessura}</strong><br>
             Tipo de acessórios: <strong>${b === 90 ? 'Somente fechadura (90mm)' : 'Fechadura + puxador (120mm)'}</strong><br>
+            Cor do Projeto: <strong>${cor}</strong><br>
           </div>
           <div>
             <h4 class="font-semibold text-green-800 mb-2">Cálculos:</h4>
             Altura da folha (H): <strong>${h.toFixed(2)} mm</strong><br>`;
 
-      // ➕ Fechamento Central + Fechaduras Laterais
+      // utilitário p/ não duplicar "KIT SOB CONSULTA"
+      let kitSobConsultaShown = false;
+      const addKSC = () => {
+        if (!kitSobConsultaShown) {
+          resultadoHTML += `
+            <div class="mt-4 p-3 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 font-semibold rounded">
+              KIT SOB CONSULTA
+            </div>`;
+          kitSobConsultaShown = true;
+        }
+      };
+
+      /* ---- Cálculos L/L1/L2/L3 conforme seleção ---- */
       if (npSelecionado === 'central-fechaduras') {
         if (sistema === '252') {
-          let l;
-          if (a === 10) {
-            l = (x + ((nf - 2) * 15) - 30) / nf;
-          } else {
-            l = (x + ((nf - 2) * 15) - 40) / nf;
-          }
+          let l = (a === 10)
+            ? (x + ((nf - 2) * 15) - 30) / nf
+            : (x + ((nf - 2) * 15) - 40) / nf;
           resultadoHTML += `Largura das folhas (Fechamento Central + Fechaduras Laterais) (L): <strong>${l.toFixed(2)} mm</strong><br>`;
         } else {
-          let l1;
-          if (a === 10) {
-            l1 = x + ((nf - 2) * 20) - 30;
-          } else {
-            l1 = x + ((nf - 2) * 20) - 40;
-          }
-
+          let l1 = (a === 10)
+            ? x + ((nf - 2) * 20) - 30
+            : x + ((nf - 2) * 20) - 40;
           const l2 = (l1 - (b * 4)) / nf;
           const l3 = l2 + b;
-          const maiores = 4;
-          const menores = nf - 4;
-
+          const maiores = 4, menores = nf - 4;
           resultadoHTML += `Pele de vidro total (L1): <strong>${l1.toFixed(2)} mm</strong><br>`;
           resultadoHTML += `Tamanho das folhas menores (L2): <strong>${l2.toFixed(2)} mm</strong> <span class="nowrap-parens">(${menores} folhas)</span><br>`;
           resultadoHTML += `Tamanho das folhas maiores (L3): <strong>${l3.toFixed(2)} mm</strong> <span class="nowrap-parens">(${maiores} folhas)</span><br>`;
         }
-      }
-
-      // ➕ Fechamento Central
-      else if (npSelecionado === 'central') {
+      } else if (npSelecionado === 'central') {
         if (sistema === '252') {
           const l = (x + ((nf - 2) * 15) - 30) / nf;
           resultadoHTML += `Largura das folhas (Fechamento Central) (L): <strong>${l.toFixed(2)} mm</strong><br>`;
@@ -202,46 +269,128 @@
           const l1 = x + ((nf - 2) * 20) - 30;
           const l2 = (l1 - (b * 2)) / nf;
           const l3 = l2 + b;
-          const maiores = 2;
-          const menores = nf - 2;
-
+          const maiores = 2, menores = nf - 2;
           resultadoHTML += `Pele de vidro total (L1): <strong>${l1.toFixed(2)} mm</strong><br>`;
           resultadoHTML += `Tamanho das folhas menores (L2): <strong>${l2.toFixed(2)} mm</strong> <span class="nowrap-parens">(${menores} folhas)</span><br>`;
           resultadoHTML += `Tamanho das folhas maiores (L3): <strong>${l3.toFixed(2)} mm</strong> <span class="nowrap-parens">(${maiores} folhas)</span><br>`;
         }
-      }
-
-      // ➕ 1 ou 2 folhas com acessórios
-      else {
+      } else {
         const np = parseInt(npSelecionado);
         if (sistema === '252') {
-          let l;
-          if (np === 1) {
-            l = (x + (nt * 15) - a - 10) / nf;
-          } else {
-            l = (x + (nt * 15) - (a * 2)) / nf;
-          }
+          let l = (np === 1)
+            ? (x + (nt * 15) - a - 10) / nf
+            : (x + (nt * 15) - (a * 2)) / nf;
           resultadoHTML += `Largura da folha (L): <strong>${l.toFixed(2)} mm</strong><br>`;
         } else {
-          let l1;
-          if (np === 1) {
-            l1 = x + (nt * 20) - a - 10;
-          } else {
-            l1 = x + (nt * 20) - 2 * a;
-          }
-
+          let l1 = (np === 1)
+            ? x + (nt * 20) - a - 10
+            : x + (nt * 20) - 2 * a;
           const l2 = (l1 - (b * np)) / nf;
           const l3 = l2 + b;
-          const maiores = np;
-          const menores = nf - np;
-
+          const maiores = np, menores = nf - np;
           resultadoHTML += `Pele de vidro total (L1): <strong>${l1.toFixed(2)} mm</strong><br>`;
           resultadoHTML += `Tamanho das folhas menores (L2): <strong>${l2.toFixed(2)} mm</strong> <span class="nowrap-parens">(${menores} folhas)</span><br>`;
           resultadoHTML += `Tamanho das folhas maiores (L3): <strong>${l3.toFixed(2)} mm</strong> <span class="nowrap-parens">(${maiores} folhas)</span><br>`;
         }
       }
 
+      // fecha grid
       resultadoHTML += `</div></div>`;
+
+      /* ---- Observação KIT SOB CONSULTA (regras existentes) ---- */
+      if (sistema === '252' || espessura === '10mm') {
+        addKSC();
+      }
+
+      /* ---- Recomendações de kit ---- */
+
+      // (254/255) + (8mm) + (2 folhas com acessórios) -> SIPC{nf}C
+      if (sistema === '254' && espessura === '8mm' && npSelecionado === '2') {
+        const sizes = kitWidthsByLeaves[nf];
+        const chosenMax = pickKitSizeFromList(sizes, x);
+        if (chosenMax) {
+          const prefix = `SIPC${nf}C`;
+          const etiqueta = widthLabel(chosenMax);
+          const codigo = `${prefix} ${etiqueta} ${cor}`;
+          resultadoHTML += `
+            <div class="mt-4 p-3 bg-blue-50 border-l-4 border-blue-500 text-blue-900 rounded">
+              <div class="font-semibold">Kit recomendado:</div>
+              <div class="text-lg font-bold">${codigo}</div>
+            </div>`;
+        } else {
+          addKSC();
+        }
+      }
+
+      // (254/255) + (8mm) + (1 folha com acessórios) -> SIPC1F{nf-1}C
+      if (sistema === '254' && espessura === '8mm' && npSelecionado === '1') {
+        const corrers = Math.max(1, nf - 1);
+        const sizes = kitWidths1FByCorrer[corrers];
+        const chosenMax = pickKitSizeFromList(sizes, x);
+        if (chosenMax) {
+          const prefix = `SIPC1F${corrers}C`;
+          const etiqueta = widthLabel(chosenMax);
+          const codigo = `${prefix} ${etiqueta} ${cor}`;
+          resultadoHTML += `
+            <div class="mt-4 p-3 bg-blue-50 border-l-4 border-blue-500 text-blue-900 rounded">
+              <div class="font-semibold">Kit recomendado:</div>
+              <div class="text-lg font-bold">${codigo}</div>
+            </div>`;
+        } else {
+          addKSC();
+        }
+      }
+
+      // (254/255) + (8mm) + (Fechamento Central) -> SIPC2F{corrers}C (nf=4,6,8)
+      if (sistema === '254' && espessura === '8mm' && npSelecionado === 'central') {
+        const sizes = kitWidthsCentralByNF[nf];
+        let family = null;
+        if (nf === 4) family = 'SIPC2F2C';
+        if (nf === 6) family = 'SIPC2F4C';
+        if (nf === 8) family = 'SIPC2F6C';
+
+        if (sizes && family) {
+          const chosenMax = pickKitSizeFromList(sizes, x);
+          if (chosenMax) {
+            const etiqueta = widthLabel(chosenMax);
+            const codigo = `${family} ${etiqueta} ${cor}`;
+            resultadoHTML += `
+              <div class="mt-4 p-3 bg-blue-50 border-l-4 border-blue-500 text-blue-900 rounded">
+                <div class="font-semibold">Kit recomendado:</div>
+                <div class="text-lg font-bold">${codigo}</div>
+              </div>`;
+          } else {
+            addKSC();
+          }
+        } else {
+          addKSC();
+        }
+      }
+
+      // (254/255) + (8mm) + (Fechamento Central + Fechaduras Laterais) -> SIPC6FC / SIPC8FC (nf=6,8)
+      if (sistema === '254' && espessura === '8mm' && npSelecionado === 'central-fechaduras') {
+        const sizes = kitWidthsCentralFechadurasByNF[nf];
+        let family = null;
+        if (nf === 6) family = 'SIPC6FC';
+        if (nf === 8) family = 'SIPC8FC';
+
+        if (sizes && family) {
+          const chosenMax = pickKitSizeFromList(sizes, x);
+          if (chosenMax) {
+            const etiqueta = widthLabel(chosenMax);
+            const codigo = `${family} ${etiqueta} ${cor}`;
+            resultadoHTML += `
+              <div class="mt-4 p-3 bg-blue-50 border-l-4 border-blue-500 text-blue-900 rounded">
+                <div class="font-semibold">Kit recomendado:</div>
+                <div class="text-lg font-bold">${codigo}</div>
+              </div>`;
+          } else {
+            addKSC();
+          }
+        } else {
+          addKSC();
+        }
+      }
 
       const svgPath = svgMap[sistema][npSelecionado];
       const svgHTML = await carregarSVG(svgPath);
@@ -260,7 +409,6 @@
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('p', 'mm', 'a4');
         const pageWidth = doc.internal.pageSize.getWidth();
-        const pageHeight = doc.internal.pageSize.getHeight();
 
         const resultado = document.getElementById('resultado');
         const logo = document.getElementById('logoVSM');
@@ -269,7 +417,6 @@
 
         const canvasLogo = document.createElement('canvas');
         canvasLogo.width = logo.width;
-        canvasLogo.height = logo.height;
         const ctx = canvasLogo.getContext('2d');
         ctx.drawImage(logo, 0, 0);
         const logoData = canvasLogo.toDataURL('image/png');
@@ -293,8 +440,8 @@
         const topMargin = 40;
         const bottomMargin = 10;
 
-        if (imgHeight > pageHeight - topMargin - bottomMargin) {
-          const maxHeight = pageHeight - topMargin - bottomMargin;
+        if (imgHeight > (297 - topMargin - bottomMargin)) {
+          const maxHeight = 297 - topMargin - bottomMargin;
           const adjustedWidth = maxHeight * imgProps;
           const x = (pageWidth - adjustedWidth) / 2;
           doc.addImage(imgData, 'PNG', x, topMargin, adjustedWidth, maxHeight);
@@ -302,7 +449,7 @@
           doc.addImage(imgData, 'PNG', 15, topMargin, imgWidth, imgHeight);
         }
 
-        // ✅ Compatível com Android e iOS
+        // Compatível com Android/iOS
         if (navigator.userAgent.match(/Android|iPhone|iPad|iPod/i)) {
           const pdfBlob = doc.output('blob');
           const blobUrl = URL.createObjectURL(pdfBlob);
