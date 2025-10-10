@@ -52,8 +52,8 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <label for="sistema" class="font-semibold">Sistema:</label>
-        <select id="sistema" class="mt-1 p-2 border rounded w-full">
+        <label for="tipoPerfil" class="font-semibold">Tipo de Perfil Mão Amiga:</label>
+        <select id="tipoPerfil" class="mt-1 p-2 border rounded w-full">
           <option value="252">BX-252 / BX-253 (Carregamento)</option>
           <option value="254">BX-254 / BX-255 (Carregamento e Retorno)</option>
         </select>
@@ -224,7 +224,15 @@
         }
       }
 
-      return lista;
+      // Adicionar 1681-30 conforme o tipo de fechamento, se for "Fechadura + puxador (120mm)"
+  if (document.getElementById('b').value === '120') {
+    if (npSelecionado === '1') lista.push(['1681-30', 1]);
+    else if (npSelecionado === '2') lista.push(['1681-30', 2]);
+    else if (npSelecionado === 'central') lista.push(['1681-30', 2]);
+    else if (npSelecionado === 'central-fechaduras') lista.push(['1681-30', 4]);
+  }
+
+  return lista;
     }
 
     function buildAccessoriesHTML(acessorios) {
@@ -248,7 +256,7 @@
     }
 
     async function calcular() {
-      const sistema = document.getElementById('sistema').value;
+      const tipoPerfil = document.getElementById('tipoPerfil').value;
       const x = parseFloat(document.getElementById('x').value);
       const c = parseFloat(document.getElementById('c').value);
       const nf = parseInt(document.getElementById('nf').value);
@@ -269,7 +277,7 @@
             Largura total do vão: <strong>${x} mm</strong><br>
             Altura total do vão: <strong>${c} mm</strong><br>
             Número de folhas: <strong>${nf}</strong><br>
-            Sistema: <strong>${sistema === '252' ? 'BX-252 / BX-253' : 'BX-254 / BX-255'}</strong><br>
+            Tipo de Perfil Mão Amiga: <strong>${tipoPerfil === '252' ? 'BX-252 / BX-253' : 'BX-254 / BX-255'}</strong><br>
             Espessura do vidro: <strong>${espessura}</strong><br>
             Acessórios da Porta Móvel: <strong>${b === 90 ? 'Somente fechadura (90mm)' : 'Fechadura + puxador (120mm)'}</strong><br>
             Cor do Projeto: <strong>${cor}</strong><br>
@@ -290,7 +298,7 @@
       };
 
       if (npSelecionado === 'central-fechaduras') {
-        if (sistema === '252') {
+        if (tipoPerfil === '252') {
           let l = (a === 10)
             ? (x + ((nf - 2) * 15) - 30) / nf
             : (x + ((nf - 2) * 15) - 40) / nf;
@@ -307,7 +315,7 @@
           resultadoHTML += `Tamanho das folhas maiores (L3): <strong>${l3.toFixed(2)} mm</strong> <span class="nowrap-parens">(${maiores} folhas)</span><br>`;
         }
       } else if (npSelecionado === 'central') {
-        if (sistema === '252') {
+        if (tipoPerfil === '252') {
           const l = (x + ((nf - 2) * 15) - 30) / nf;
           resultadoHTML += `Largura das folhas (Fechamento Central + 2 Fixos) (L): <strong>${l.toFixed(2)} mm</strong><br>`;
         } else {
@@ -321,7 +329,7 @@
         }
       } else {
         const np = parseInt(npSelecionado);
-        if (sistema === '252') {
+        if (tipoPerfil === '252') {
           let l = (np === 1)
             ? (x + (nt * 15) - a - 10) / nf
             : (x + (nt * 15) - (a * 2)) / nf;
@@ -347,18 +355,18 @@
       if (c > 3000) {
         addKSC();
         resultadoHTML += accessoriesHTML;
-        const svgPath = svgMap[sistema][npSelecionado];
+        const svgPath = svgMap[tipoPerfil][npSelecionado];
         const svgHTML = await carregarSVG(svgPath);
         document.querySelector('#resultado > div').innerHTML = resultadoHTML + svgHTML;
         document.getElementById('btnSalvarPDF').classList.remove('hidden');
         return;
       }
 
-      if (sistema === '252' || espessura === '10mm') {
+      if (tipoPerfil === '252' || espessura === '10mm') {
         addKSC();
       }
 
-      if (sistema === '254' && espessura === '8mm' && npSelecionado === '2') {
+      if (tipoPerfil === '254' && espessura === '8mm' && npSelecionado === '2') {
         const sizes = kitWidthsByLeaves[nf];
         const chosenMax = pickKitSizeFromList(sizes, x);
         if (chosenMax) {
@@ -375,7 +383,7 @@
         }
       }
 
-      if (sistema === '254' && espessura === '8mm' && npSelecionado === '1') {
+      if (tipoPerfil === '254' && espessura === '8mm' && npSelecionado === '1') {
         const corrers = Math.max(1, nf - 1);
         const sizes = kitWidths1FByCorrer[corrers];
         const chosenMax = pickKitSizeFromList(sizes, x);
@@ -393,7 +401,7 @@
         }
       }
 
-      if (sistema === '254' && espessura === '8mm' && npSelecionado === 'central') {
+      if (tipoPerfil === '254' && espessura === '8mm' && npSelecionado === 'central') {
         const sizes = kitWidthsCentralByNF[nf];
         let family = null;
         if (nf === 4) family = 'SIPC2F2C';
@@ -418,7 +426,7 @@
         }
       }
 
-      if (sistema === '254' && espessura === '8mm' && npSelecionado === 'central-fechaduras') {
+      if (tipoPerfil === '254' && espessura === '8mm' && npSelecionado === 'central-fechaduras') {
         const sizes = kitWidthsCentralFechadurasByNF[nf];
         let family = null;
         if (nf === 6) family = 'SIPC6FC';
@@ -444,7 +452,7 @@
 
       resultadoHTML += accessoriesHTML;
 
-      const svgPath = svgMap[sistema][npSelecionado];
+      const svgPath = svgMap[tipoPerfil][npSelecionado];
       const svgHTML = await carregarSVG(svgPath);
 
       document.querySelector('#resultado > div').innerHTML = resultadoHTML + svgHTML;
