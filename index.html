@@ -75,17 +75,17 @@
       </div>
 
       <div>
-        <label for="np" class="font-semibold">Folhas com acessórios:</label>
+        <label for="np" class="font-semibold">Tipo de Fechamento:</label>
         <select id="np" class="mt-1 p-2 border rounded w-full">
-          <option value="1">1 folha com acessórios</option>
-          <option value="2">2 folhas com acessórios</option>
-          <option value="central">Fechamento Central</option>
+          <option value="1">Fechadura Lateral + 1 Fixo</option>
+          <option value="2">Fechaduras Laterais</option>
+          <option value="central">Fechamento Central + 2 Fixos</option>
           <option value="central-fechaduras">Fechamento Central + Fechaduras Laterais</option>
         </select>
       </div>
 
       <div>
-        <label for="a" class="font-semibold">Perfil do sistema:</label>
+        <label for="a" class="font-semibold">Modelo de Contra Fechadura:</label>
         <select id="a" class="mt-1 p-2 border rounded w-full">
           <option value="15">Sem recorte (15mm)</option>
           <option value="10">Com recorte (10mm)</option>
@@ -93,7 +93,7 @@
       </div>
 
       <div>
-        <label for="b" class="font-semibold">Tipo de acessórios:</label>
+        <label for="b" class="font-semibold">Acessórios da Porta Móvel:</label>
         <select id="b" class="mt-1 p-2 border rounded w-full">
           <option value="90">Somente fechadura (90mm)</option>
           <option value="120">Fechadura + puxador (120mm)</option>
@@ -144,8 +144,6 @@
       }
     };
 
-    /* ============== TABELAS DE KITS ============== */
-
     const kitWidthsByLeaves = {
       2: [1500, 2000, 3000],
       3: [2000, 3000, 4000],
@@ -173,8 +171,6 @@
       8: [4000, 6000, 8000, 9000, 11000, 12000]
     };
 
-    /* ============== HELPERS ============== */
-
     function widthLabel(mm) {
       const m = (mm / 1000).toFixed(2).replace('.', ',');
       return `${m}X3,00`;
@@ -193,6 +189,62 @@
         .then(res => res.text())
         .then(svg => `<div class="mt-4 border rounded p-2">${svg}</div>`)
         .catch(() => `<p class="text-red-600 mt-4">Erro ao carregar o desenho técnico.</p>`);
+    }
+
+    // NOVO: acessórios em grade horizontal
+    function q(n) { return Math.max(0, Number(n) || 0); }
+
+    function getAcessorios(npSelecionado, a, nf) {
+      const comRecorte = (a === 10);
+      const lista = [];
+
+      if (npSelecionado === '1') {
+        if (comRecorte) {
+          lista.push(['1510X', 1], ['1511AX', 1], ['1126DCP', q((nf - 1) * 2)]);
+        } else {
+          lista.push(['1510CX', 1], ['1511 15ACX', 1], ['1126DCP', q((nf - 1) * 2)]);
+        }
+      } else if (npSelecionado === '2') {
+        if (comRecorte) {
+          lista.push(['1510X', 2], ['1511AX', 2], ['1126DCP', q(nf * 2)]);
+        } else {
+          lista.push(['1510CX', 2], ['1511 15ACX', 2], ['1126DCP', q(nf * 2)]);
+        }
+      } else if (npSelecionado === 'central') {
+        if (comRecorte) {
+          lista.push(['1510X', 1], ['1511X', 1], ['1126DCP', q((nf - 2) * 2)]);
+        } else {
+          lista.push(['1510CX', 1], ['1511CX', 1], ['1126DCP', q((nf - 2) * 2)]);
+        }
+      } else if (npSelecionado === 'central-fechaduras') {
+        if (comRecorte) {
+          lista.push(['1510X', 3], ['1511AX', 2], ['1511X', 1], ['1126DCP', q(nf * 2)]);
+        } else {
+          lista.push(['1510CX', 3], ['1511 15ACX', 2], ['1511CX', 1], ['1126DCP', q(nf * 2)]);
+        }
+      }
+
+      return lista;
+    }
+
+    function buildAccessoriesHTML(acessorios) {
+      if (!acessorios || !acessorios.length) return '';
+      const items = acessorios
+        .map(([cod, qty]) => `
+          <li class="flex items-center gap-1 whitespace-nowrap">
+            <span class="font-mono">${cod}</span>
+            <span>=</span>
+            <strong>${qty}</strong>
+          </li>`)
+        .join('');
+      return `
+        <div class="mt-4 p-3 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-900 rounded">
+          <div class="font-semibold mb-1">Acessórios indicados:</div>
+          <ul class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-1 text-sm list-none p-0 m-0">
+            ${items}
+          </ul>
+        </div>
+      `;
     }
 
     async function calcular() {
@@ -219,14 +271,13 @@
             Número de folhas: <strong>${nf}</strong><br>
             Sistema: <strong>${sistema === '252' ? 'BX-252 / BX-253' : 'BX-254 / BX-255'}</strong><br>
             Espessura do vidro: <strong>${espessura}</strong><br>
-            Tipo de acessórios: <strong>${b === 90 ? 'Somente fechadura (90mm)' : 'Fechadura + puxador (120mm)'}</strong><br>
+            Acessórios da Porta Móvel: <strong>${b === 90 ? 'Somente fechadura (90mm)' : 'Fechadura + puxador (120mm)'}</strong><br>
             Cor do Projeto: <strong>${cor}</strong><br>
           </div>
           <div>
             <h4 class="font-semibold text-green-800 mb-2">Cálculos:</h4>
             Altura da folha (H): <strong>${h.toFixed(2)} mm</strong><br>`;
 
-      // utilitário p/ não duplicar "KIT SOB CONSULTA"
       let kitSobConsultaShown = false;
       const addKSC = () => {
         if (!kitSobConsultaShown) {
@@ -238,7 +289,6 @@
         }
       };
 
-      /* ---- Cálculos L/L1/L2/L3 conforme seleção ---- */
       if (npSelecionado === 'central-fechaduras') {
         if (sistema === '252') {
           let l = (a === 10)
@@ -259,7 +309,7 @@
       } else if (npSelecionado === 'central') {
         if (sistema === '252') {
           const l = (x + ((nf - 2) * 15) - 30) / nf;
-          resultadoHTML += `Largura das folhas (Fechamento Central) (L): <strong>${l.toFixed(2)} mm</strong><br>`;
+          resultadoHTML += `Largura das folhas (Fechamento Central + 2 Fixos) (L): <strong>${l.toFixed(2)} mm</strong><br>`;
         } else {
           const l1 = x + ((nf - 2) * 20) - 30;
           const l2 = (l1 - (b * 2)) / nf;
@@ -289,27 +339,25 @@
         }
       }
 
-      // fecha grid (mantém layout dos cálculos corretos)
       resultadoHTML += `</div></div>`;
 
-      /* ---- NOVA REGRA: Altura > 3000mm -> só KSC e encerra ---- */
+      const acessorios = getAcessorios(npSelecionado, a, nf);
+      const accessoriesHTML = buildAccessoriesHTML(acessorios);
+
       if (c > 3000) {
         addKSC();
+        resultadoHTML += accessoriesHTML;
         const svgPath = svgMap[sistema][npSelecionado];
         const svgHTML = await carregarSVG(svgPath);
         document.querySelector('#resultado > div').innerHTML = resultadoHTML + svgHTML;
         document.getElementById('btnSalvarPDF').classList.remove('hidden');
-        return; // impede qualquer indicação de kit
+        return;
       }
 
-      /* ---- Regras existentes de observação ---- */
       if (sistema === '252' || espessura === '10mm') {
         addKSC();
       }
 
-      /* ---- Recomendações de kit (só chegam aqui se c <= 3000) ---- */
-
-      // (254/255) + (8mm) + (2 folhas com acessórios) -> SIPC{nf}C
       if (sistema === '254' && espessura === '8mm' && npSelecionado === '2') {
         const sizes = kitWidthsByLeaves[nf];
         const chosenMax = pickKitSizeFromList(sizes, x);
@@ -327,7 +375,6 @@
         }
       }
 
-      // (254/255) + (8mm) + (1 folha com acessórios) -> SIPC1F{nf-1}C
       if (sistema === '254' && espessura === '8mm' && npSelecionado === '1') {
         const corrers = Math.max(1, nf - 1);
         const sizes = kitWidths1FByCorrer[corrers];
@@ -346,7 +393,6 @@
         }
       }
 
-      // (254/255) + (8mm) + (Fechamento Central) -> SIPC2F{corrers}C (nf=4,6,8)
       if (sistema === '254' && espessura === '8mm' && npSelecionado === 'central') {
         const sizes = kitWidthsCentralByNF[nf];
         let family = null;
@@ -372,7 +418,6 @@
         }
       }
 
-      // (254/255) + (8mm) + (Fechamento Central + Fechaduras Laterais) -> SIPC6FC / SIPC8FC (nf=6,8)
       if (sistema === '254' && espessura === '8mm' && npSelecionado === 'central-fechaduras') {
         const sizes = kitWidthsCentralFechadurasByNF[nf];
         let family = null;
@@ -396,6 +441,8 @@
           addKSC();
         }
       }
+
+      resultadoHTML += accessoriesHTML;
 
       const svgPath = svgMap[sistema][npSelecionado];
       const svgHTML = await carregarSVG(svgPath);
@@ -454,13 +501,13 @@
           doc.addImage(imgData, 'PNG', 15, topMargin, imgWidth, imgHeight);
         }
 
-        // Compatível com Android/iOS
         if (navigator.userAgent.match(/Android|iPhone|iPad|iPod/i)) {
           const pdfBlob = doc.output('blob');
           const blobUrl = URL.createObjectURL(pdfBlob);
           const a = document.createElement('a');
           a.href = blobUrl;
-          a.download = 'resultado_stanley.pdf';
+          const filename = 'resultado_stanley.pdf';
+          a.download = filename;
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);
